@@ -18,6 +18,7 @@ import { AboutStepRule } from '../../../pages/detection_engine/rules/types';
 import { OptionalFieldLabel } from '../optional_field_label';
 import { isUrlInvalid } from '../../../../common/utils/validators';
 import * as I18n from './translations';
+import { emptyArrayItem } from './field_validators';
 
 const { emptyField } = fieldValidators;
 
@@ -38,6 +39,19 @@ export const schema: FormSchema<AboutStepRule> = {
       }
     ),
     labelAppend: OptionalFieldLabel,
+    validations: [
+      {
+        validator: emptyArrayItem(
+          i18n.translate(
+            'xpack.securitySolution.detectionEngine.createRule.stepAboutRule.tagFieldEmptyError',
+            {
+              defaultMessage: 'An author must not be empty',
+            }
+          )
+        ),
+        type: 'arrayItem',
+      },
+    ],
   },
   name: {
     type: FIELD_TYPES.TEXT,
@@ -243,6 +257,19 @@ export const schema: FormSchema<AboutStepRule> = {
       }
     ),
     labelAppend: OptionalFieldLabel,
+    validations: [
+      {
+        validator: emptyArrayItem(
+          i18n.translate(
+            'xpack.securitySolution.detectionEngine.createRule.stepAboutRule.tagFieldEmptyError',
+            {
+              defaultMessage: 'A tag must not be empty',
+            }
+          )
+        ),
+        type: 'arrayItem',
+      },
+    ],
   },
   note: {
     type: FIELD_TYPES.TEXTAREA,
