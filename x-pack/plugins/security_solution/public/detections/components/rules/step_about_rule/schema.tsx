@@ -43,7 +43,7 @@ export const schema: FormSchema<AboutStepRule> = {
       {
         validator: emptyArrayItem(
           i18n.translate(
-            'xpack.securitySolution.detectionEngine.createRule.stepAboutRule.tagFieldEmptyError',
+            'xpack.securitySolution.detectionEngine.createRule.stepAboutRule.authorFieldEmptyError',
             {
               defaultMessage: 'An author must not be empty',
             }
