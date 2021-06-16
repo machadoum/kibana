@@ -343,7 +343,7 @@ export const useField = <T, FormType = FormData, I = T>(
       const {
         formData = __getFormData$().value,
         value: valueToValidate = value,
-        validationType,
+        validationType = 'field',
       } = validationData;
 
       setIsValidated(true);

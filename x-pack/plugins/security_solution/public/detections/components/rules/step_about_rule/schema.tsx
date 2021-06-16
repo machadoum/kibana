@@ -18,7 +18,6 @@ import { AboutStepRule } from '../../../pages/detection_engine/rules/types';
 import { OptionalFieldLabel } from '../optional_field_label';
 import { isUrlInvalid } from '../../../../common/utils/validators';
 import * as I18n from './translations';
-import { emptyArrayItem } from './field_validators';
 
 const { emptyField } = fieldValidators;
 
@@ -41,7 +40,7 @@ export const schema: FormSchema<AboutStepRule> = {
     labelAppend: OptionalFieldLabel,
     validations: [
       {
-        validator: emptyArrayItem(
+        validator: emptyField(
           i18n.translate(
             'xpack.securitySolution.detectionEngine.createRule.stepAboutRule.authorFieldEmptyError',
             {
@@ -50,6 +49,7 @@ export const schema: FormSchema<AboutStepRule> = {
           )
         ),
         type: 'arrayItem',
+        isBlocking: false,
       },
     ],
   },
@@ -259,7 +259,7 @@ export const schema: FormSchema<AboutStepRule> = {
     labelAppend: OptionalFieldLabel,
     validations: [
       {
-        validator: emptyArrayItem(
+        validator: emptyField(
           i18n.translate(
             'xpack.securitySolution.detectionEngine.createRule.stepAboutRule.tagFieldEmptyError',
             {
@@ -268,6 +268,7 @@ export const schema: FormSchema<AboutStepRule> = {
           )
         ),
         type: 'arrayItem',
+        isBlocking: false,
       },
     ],
   },
