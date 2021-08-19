@@ -12,6 +12,7 @@ import type {
   TimelineNonEcsData,
 } from '../../../../../timelines/common/search_strategy';
 import { DataProvider, TGridCellAction } from '../../../../../timelines/common/types';
+
 import { TimelineId } from '../../../../common';
 import { getMappedNonEcsValue } from '../../../timelines/components/timeline/body/data_driven_columns';
 import { IS_OPERATOR } from '../../../timelines/components/timeline/data_providers/data_provider';
@@ -35,13 +36,36 @@ const useKibanaServices = () => {
   return { timelines, filterManager };
 };
 
+/**
+ * rowIndex is bigger than `data.length` for pages with page numbers bigger than one.
+ * For that reason, we must calculate `rowIndex % itemsPerPage`.
+ *
+ * Ex:
+ * Given `rowIndex` is `13` and `itemsPerPage` is `10`.
+ * It means that the `activePage` is `2` and the `pageRowIndex` is `3`
+ *
+ * **Warning**:
+ * Be careful with array out of bounds. `pageRowIndex` can be bigger or equal to `data.length`
+ *  in the scenario where the user changes the event status (Open, Acknowledged, Closed).
+ */
+export const getPageRowIndex = (rowIndex: number, itemsPerPage: number) => rowIndex % itemsPerPage;
+
 /** the default actions shown in `EuiDataGrid` cells */
 export const defaultCellActions: TGridCellAction[] = [
-  ({ data }: { data: TimelineNonEcsData[][] }) => ({ rowIndex, columnId, Component }) => {
+  ({ data, pageSize }: { data: TimelineNonEcsData[][]; pageSize: number }) => ({
+    rowIndex,
+    columnId,
+    Component,
+  }) => {
     const { timelines, filterManager } = useKibanaServices();
 
+    const pageRowIndex = getPageRowIndex(rowIndex, pageSize);
+    if (pageRowIndex >= data.length) {
+      return null;
+    }
+
     const value = getMappedNonEcsValue({
-      data: data[rowIndex],
+      data: data[pageRowIndex],
       fieldName: columnId,
     });
 
@@ -59,11 +83,20 @@ export const defaultCellActions: TGridCellAction[] = [
       </>
     );
   },
-  ({ data }: { data: TimelineNonEcsData[][] }) => ({ rowIndex, columnId, Component }) => {
+  ({ data, pageSize }: { data: TimelineNonEcsData[][]; pageSize: number }) => ({
+    rowIndex,
+    columnId,
+    Component,
+  }) => {
     const { timelines, filterManager } = useKibanaServices();
 
+    const pageRowIndex = getPageRowIndex(rowIndex, pageSize);
+    if (pageRowIndex >= data.length) {
+      return null;
+    }
+
     const value = getMappedNonEcsValue({
-      data: data[rowIndex],
+      data: data[pageRowIndex],
       fieldName: columnId,
     });
 
@@ -81,11 +114,20 @@ export const defaultCellActions: TGridCellAction[] = [
       </>
     );
   },
-  ({ data }: { data: TimelineNonEcsData[][] }) => ({ rowIndex, columnId, Component }) => {
+  ({ data, pageSize }: { data: TimelineNonEcsData[][]; pageSize: number }) => ({
+    rowIndex,
+    columnId,
+    Component,
+  }) => {
     const { timelines } = useKibanaServices();
 
+    const pageRowIndex = getPageRowIndex(rowIndex, pageSize);
+    if (pageRowIndex >= data.length) {
+      return null;
+    }
+
     const value = getMappedNonEcsValue({
-      data: data[rowIndex],
+      data: data[pageRowIndex],
       fieldName: columnId,
     });
 
@@ -119,16 +161,25 @@ export const defaultCellActions: TGridCellAction[] = [
       </>
     );
   },
-  ({ browserFields, data }: { browserFields: BrowserFields; data: TimelineNonEcsData[][] }) => ({
-    rowIndex,
-    columnId,
-    Component,
-  }) => {
+  ({
+    browserFields,
+    data,
+    pageSize,
+  }: {
+    browserFields: BrowserFields;
+    data: TimelineNonEcsData[][];
+    pageSize: number;
+  }) => ({ rowIndex, columnId, Component }) => {
     const [showTopN, setShowTopN] = useState(false);
     const onClick = useCallback(() => setShowTopN(!showTopN), [showTopN]);
 
+    const pageRowIndex = getPageRowIndex(rowIndex, pageSize);
+    if (pageRowIndex >= data.length) {
+      return null;
+    }
+
     const value = getMappedNonEcsValue({
-      data: data[rowIndex],
+      data: data[pageRowIndex],
       fieldName: columnId,
     });
 
@@ -155,11 +206,20 @@ export const defaultCellActions: TGridCellAction[] = [
       </>
     );
   },
-  ({ data }: { data: TimelineNonEcsData[][] }) => ({ rowIndex, columnId, Component }) => {
+  ({ data, pageSize }: { data: TimelineNonEcsData[][]; pageSize: number }) => ({
+    rowIndex,
+    columnId,
+    Component,
+  }) => {
     const { timelines } = useKibanaServices();
 
+    const pageRowIndex = getPageRowIndex(rowIndex, pageSize);
+    if (pageRowIndex >= data.length) {
+      return null;
+    }
+
     const value = getMappedNonEcsValue({
-      data: data[rowIndex],
+      data: data[pageRowIndex],
       fieldName: columnId,
     });
 

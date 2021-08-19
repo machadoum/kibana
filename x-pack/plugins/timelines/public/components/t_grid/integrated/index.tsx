@@ -8,7 +8,7 @@
 import type { AlertConsumers as AlertConsumersTyped } from '@kbn/rule-data-utils';
 // @ts-expect-error
 import { AlertConsumers as AlertConsumersNonTyped } from '@kbn/rule-data-utils/target_node/alerts_as_data_rbac';
-import { EuiEmptyPrompt, EuiFlexGroup, EuiFlexItem, EuiPanel, EuiProgress } from '@elastic/eui';
+import { EuiEmptyPrompt, EuiFlexGroup, EuiFlexItem, EuiPanel } from '@elastic/eui';
 import { isEmpty } from 'lodash/fp';
 import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
@@ -39,20 +39,15 @@ import {
 } from '../../../../../../../src/plugins/data/public';
 import { useDeepEqualSelector } from '../../../hooks/use_selector';
 import { defaultHeaders } from '../body/column_headers/default_headers';
-import {
-  calculateTotalPages,
-  buildCombinedQuery,
-  getCombinedFilterQuery,
-  resolverIsShowing,
-} from '../helpers';
+import { buildCombinedQuery, getCombinedFilterQuery, resolverIsShowing } from '../helpers';
 import { tGridActions, tGridSelectors } from '../../../store/t_grid';
 import { useTimelineEvents } from '../../../container';
 import { StatefulBody } from '../body';
-import { Footer, footerHeight } from '../footer';
 import { SELECTOR_TIMELINE_GLOBAL_CONTAINER, UpdatedFlexGroup, UpdatedFlexItem } from '../styles';
 import { Sort } from '../body/sort';
 import { InspectButton, InspectButtonContainer } from '../../inspect';
 import { SummaryViewSelector, ViewSelection } from '../event_rendered_view/selector';
+import { LoadingPanel } from '../..';
 
 const AlertConsumers: typeof AlertConsumersTyped = AlertConsumersNonTyped;
 
@@ -155,7 +150,6 @@ const TGridIntegratedComponent: React.FC<TGridIntegratedProps> = ({
   id,
   indexNames,
   indexPattern,
-  isLive,
   isLoadingIndexPattern,
   itemsPerPage,
   itemsPerPageOptions,
@@ -164,7 +158,6 @@ const TGridIntegratedComponent: React.FC<TGridIntegratedProps> = ({
   query,
   renderCellValue,
   rowRenderers,
-  setGlobalFullScreen,
   start,
   sort,
   additionalFilters,
@@ -184,7 +177,7 @@ const TGridIntegratedComponent: React.FC<TGridIntegratedProps> = ({
 
   const [tableView, setTableView] = useState<ViewSelection>('gridView');
   const getManageTimeline = useMemo(() => tGridSelectors.getManageTimelineById(), []);
-  const { queryFields, title } = useDeepEqualSelector((state) =>
+  const { queryFields, title, loadingText } = useDeepEqualSelector((state) =>
     getManageTimeline(state, id ?? '')
   );
 
@@ -290,8 +283,6 @@ const TGridIntegratedComponent: React.FC<TGridIntegratedProps> = ({
         data-test-subj="events-viewer-panel"
         $isFullScreen={globalFullScreen}
       >
-        {loading && <EuiProgress size="xs" position="absolute" color="accent" />}
-
         {canQueryTimeline ? (
           <>
             <EventsContainerLoading
@@ -351,15 +342,11 @@ const TGridIntegratedComponent: React.FC<TGridIntegratedProps> = ({
                         itemsPerPageOptions={itemsPerPageOptions}
                         loadPage={loadPage}
                         onRuleChange={onRuleChange}
-                        querySize={pageInfo.querySize}
+                        pageSize={itemsPerPage}
                         renderCellValue={renderCellValue}
                         rowRenderers={rowRenderers}
                         tabType={TimelineTabs.query}
                         tableView={tableView}
-                        totalPages={calculateTotalPages({
-                          itemsCount: totalCountMinusDeleted,
-                          itemsPerPage,
-                        })}
                         totalItems={totalCountMinusDeleted}
                         unit={unit}
                         filterStatus={filterStatus}
@@ -368,25 +355,20 @@ const TGridIntegratedComponent: React.FC<TGridIntegratedProps> = ({
                         refetch={refetch}
                         indexNames={indexNames}
                       />
-                      {tableView === 'gridView' && (
-                        <Footer
-                          activePage={pageInfo.activePage}
-                          data-test-subj="events-viewer-footer"
-                          height={footerHeight}
-                          id={id}
-                          isLive={isLive}
-                          isLoading={loading}
-                          itemsCount={nonDeletedEvents.length}
-                          itemsPerPage={itemsPerPage}
-                          itemsPerPageOptions={itemsPerPageOptions}
-                          onChangePage={loadPage}
-                          totalCount={totalCountMinusDeleted}
-                        />
-                      )}
                     </>
                   )}
                 </ScrollableFlexItem>
               </FullWidthFlexGroup>
+              {loading && (
+                <LoadingPanel
+                  data-test-subj="LoadingPanelTimeline"
+                  position="absolute"
+                  showBorder={false}
+                  text={loadingText}
+                  height="100%"
+                  width="100%"
+                />
+              )}
             </EventsContainerLoading>
           </>
         ) : null}
