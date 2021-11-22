@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { EuiSpacer, EuiWindowEvent } from '@elastic/eui';
+import { EuiButton, EuiSpacer, EuiWindowEvent } from '@elastic/eui';
 import styled from 'styled-components';
 import { noop } from 'lodash/fp';
 import React, { useCallback, useMemo, useRef } from 'react';
@@ -25,7 +25,7 @@ import { SiemSearchBar } from '../../common/components/search_bar';
 import { SecuritySolutionPageWrapper } from '../../common/components/page_wrapper';
 import { useGlobalFullScreen } from '../../common/containers/use_full_screen';
 import { useGlobalTime } from '../../common/containers/use_global_time';
-import { TimelineId } from '../../../common/types/timeline';
+import { IS_OPERATOR, TimelineId } from '../../../common/types/timeline';
 import { LastEventIndexKey } from '../../../common/search_strategy';
 import { useKibana } from '../../common/lib/kibana';
 import { convertToBuildEsQuery } from '../../common/lib/keury';
@@ -33,7 +33,7 @@ import { inputsSelectors } from '../../common/store';
 import { setAbsoluteRangeDatePicker } from '../../common/store/inputs/actions';
 
 import { SpyRoute } from '../../common/utils/route/spy_routes';
-import { esQuery } from '../../../../../../src/plugins/data/public';
+import { esQuery, Filter } from '../../../../../../src/plugins/data/public';
 import { useMlCapabilities } from '../../common/components/ml/hooks/use_ml_capabilities';
 import { OverviewEmpty } from '../../overview/components/overview_empty';
 import { Display } from './display';
@@ -54,6 +54,9 @@ import { useSourcererDataView } from '../../common/containers/sourcerer';
 import { useDeepEqualSelector, useShallowEqualSelector } from '../../common/hooks/use_selector';
 import { useInvalidFilterQuery } from '../../common/hooks/use_invalid_filter_query';
 import { ID } from '../containers/hosts';
+import { DraggableWrapper } from '../../common/components/drag_and_drop/draggable_wrapper';
+import { useHostsRiskScore } from '../../overview/containers/overview_risky_host_links/use_hosts_risk_score';
+import { AddFilterToGlobalSearchBar } from '../../common/components/add_filter_to_global_search_bar';
 
 /**
  * Need a 100% height here to account for the graph/analyze tool, which sets no explicit height parameters, but fills the available space.
@@ -159,6 +162,42 @@ const HostsComponent = () => {
     [containerElement, onSkipFocusBeforeEventsTable, onSkipFocusAfterEventsTable]
   );
 
+  const timerange = useMemo(() => ({ from, to }), [from, to]);
+
+  const hostRiskScore = useHostsRiskScore({ timerange });
+
+  const createHostRiskFilter = useCallback(
+    (riskLevel: string) => ({
+      meta: {
+        alias: `host.risk.classification: ${riskLevel}`,
+        negate: false,
+        disabled: false,
+        type: 'terms',
+        key: `host.risk.classification.${riskLevel}`,
+        value: riskLevel,
+        params: {
+          query: riskLevel,
+        },
+      },
+      query: {
+        bool: {
+          should: [
+            {
+              terms: {
+                'host.name': hostRiskScore?.result
+                  ? hostRiskScore.result
+                      .filter((hostRisk) => hostRisk.host && hostRisk.risk === riskLevel)
+                      .map((hostRisk) => hostRisk.host.name)
+                  : '',
+              },
+            },
+          ],
+        },
+      },
+    }),
+    [hostRiskScore]
+  );
+
   return (
     <>
       {indicesExist ? (
@@ -200,7 +239,28 @@ const HostsComponent = () => {
 
               <EuiSpacer />
             </Display>
-
+            {hostRiskScore?.result && (
+              <>
+                <div style={{ width: '150px', backgroundColor: '#f099a8' }}>
+                  <AddFilterToGlobalSearchBar filter={createHostRiskFilter('critical')}>
+                    <>{'filter risk critical'}</>
+                  </AddFilterToGlobalSearchBar>
+                </div>
+                <br />
+                <div style={{ width: '150px', backgroundColor: '#bbc1fc' }}>
+                  <AddFilterToGlobalSearchBar filter={createHostRiskFilter('low')}>
+                    <>{'filter risk low'}</>
+                  </AddFilterToGlobalSearchBar>
+                </div>
+                <br />
+                <div style={{ width: '150px', backgroundColor: '#bdbdbd' }}>
+                  <AddFilterToGlobalSearchBar filter={createHostRiskFilter('unknow')}>
+                    <>{'filter risk unknow'}</>
+                  </AddFilterToGlobalSearchBar>
+                </div>
+              </>
+            )}
+            <EuiSpacer />
             <HostsTabs
               deleteQuery={deleteQuery}
               docValueFields={docValueFields}
