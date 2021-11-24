@@ -243,19 +243,19 @@ const HostsComponent = () => {
             {hostRiskScore?.result && (
               <>
                 <div style={{ width: '150px', backgroundColor: '#f099a8' }}>
-                  <AddFilterToGlobalSearchBar filter={createHostRiskFilter('critical')}>
+                  <AddFilterToGlobalSearchBar filter={createHostRiskFilter('Critical')}>
                     <>{'filter risk critical'}</>
                   </AddFilterToGlobalSearchBar>
                 </div>
                 <br />
                 <div style={{ width: '150px', backgroundColor: '#bbc1fc' }}>
-                  <AddFilterToGlobalSearchBar filter={createHostRiskFilter('low')}>
+                  <AddFilterToGlobalSearchBar filter={createHostRiskFilter('Low')}>
                     <>{'filter risk low'}</>
                   </AddFilterToGlobalSearchBar>
                 </div>
                 <br />
                 <div style={{ width: '150px', backgroundColor: '#bdbdbd' }}>
-                  <AddFilterToGlobalSearchBar filter={createHostRiskFilter('unknow')}>
+                  <AddFilterToGlobalSearchBar filter={createHostRiskFilter('Unknown')}>
                     <>{'filter risk unknow'}</>
                   </AddFilterToGlobalSearchBar>
                 </div>
