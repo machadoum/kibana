@@ -25,7 +25,7 @@ import { SiemSearchBar } from '../../common/components/search_bar';
 import { SecuritySolutionPageWrapper } from '../../common/components/page_wrapper';
 import { useGlobalFullScreen } from '../../common/containers/use_full_screen';
 import { useGlobalTime } from '../../common/containers/use_global_time';
-import { IS_OPERATOR, TimelineId } from '../../../common/types/timeline';
+import { TimelineId } from '../../../common/types/timeline';
 import { LastEventIndexKey } from '../../../common/search_strategy';
 import { useKibana } from '../../common/lib/kibana';
 import { convertToBuildEsQuery } from '../../common/lib/keury';
@@ -33,7 +33,7 @@ import { inputsSelectors } from '../../common/store';
 import { setAbsoluteRangeDatePicker } from '../../common/store/inputs/actions';
 
 import { SpyRoute } from '../../common/utils/route/spy_routes';
-import { esQuery, Filter } from '../../../../../../src/plugins/data/public';
+import { esQuery } from '../../../../../../src/plugins/data/public';
 import { useMlCapabilities } from '../../common/components/ml/hooks/use_ml_capabilities';
 import { OverviewEmpty } from '../../overview/components/overview_empty';
 import { Display } from './display';
@@ -54,8 +54,9 @@ import { useSourcererDataView } from '../../common/containers/sourcerer';
 import { useDeepEqualSelector, useShallowEqualSelector } from '../../common/hooks/use_selector';
 import { useInvalidFilterQuery } from '../../common/hooks/use_invalid_filter_query';
 import { ID } from '../containers/hosts';
-import { DraggableWrapper } from '../../common/components/drag_and_drop/draggable_wrapper';
-import { useHostsRiskScore } from '../../overview/containers/overview_risky_host_links/use_hosts_risk_score';
+
+import { useHostsRiskScore } from '../../common/containers/hosts_risk/use_hosts_risk_score';
+
 import { AddFilterToGlobalSearchBar } from '../../common/components/add_filter_to_global_search_bar';
 
 /**

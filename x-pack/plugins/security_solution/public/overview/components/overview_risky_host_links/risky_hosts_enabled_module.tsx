@@ -10,7 +10,7 @@ import { RiskyHostsPanelView } from './risky_hosts_panel_view';
 import { LinkPanelListItem } from '../link_panel';
 import { useRiskyHostsDashboardButtonHref } from '../../containers/overview_risky_host_links/use_risky_hosts_dashboard_button_href';
 import { useRiskyHostsDashboardLinks } from '../../containers/overview_risky_host_links/use_risky_hosts_dashboard_links';
-import { HostRisk } from '../../containers/overview_risky_host_links/use_hosts_risk_score';
+import { HostRisk } from '../../../common/containers/hosts_risk/use_hosts_risk_score';
 import { HostsRiskScore } from '../../../../common';
 
 const getListItemsFromHits = (items: HostsRiskScore[]): LinkPanelListItem[] => {
