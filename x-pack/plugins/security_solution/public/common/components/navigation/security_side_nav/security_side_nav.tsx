@@ -7,6 +7,7 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { EuiHorizontalRule, EuiListGroupItem, EuiLoadingSpinner } from '@elastic/eui';
+import styled from 'styled-components';
 import { SecurityPageName } from '../../../../app/types';
 import { getAncestorLinksInfo } from '../../../links';
 import { useRouteSpy } from '../../../utils/route/use_route_spy';
@@ -22,6 +23,11 @@ const isFooterNavItem = (id: SecurityPageName) =>
   id === SecurityPageName.landing || id === SecurityPageName.administration;
 
 type FormatSideNavItems = (navItems: NavLinkItem) => SideNavItem;
+
+const HorizontalRuleWithMargin = styled(EuiHorizontalRule)`
+  margin-top: ${({ theme }) => theme.eui.paddingSizes.m};
+  margin-bottom: ${({ theme }) => theme.eui.paddingSizes.l};
+`;
 
 /**
  * Renders the navigation item for "Get Started" custom link
@@ -43,7 +49,7 @@ const GetStartedCustomLinkComponent: React.FC<{
         color: isSelected ? 'primary' : 'text',
       }}
     />
-    <EuiHorizontalRule margin="xs" />
+    <HorizontalRuleWithMargin />
   </SecuritySolutionLinkAnchor>
 );
 const GetStartedCustomLink = React.memo(GetStartedCustomLinkComponent);
