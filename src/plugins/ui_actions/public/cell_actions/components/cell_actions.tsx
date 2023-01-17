@@ -80,6 +80,10 @@ export interface CellActionsProps {
    */
   visibleCellActions?: number;
   /**
+   * List of Actions ids that shouldn't be displayed inside cell actions.
+   */
+  disabledActions?: string[];
+  /**
    * Custom set of properties used by some actions.
    * An action might require a specific set of metadata properties to render.
    * This data is sent directly to actions.
@@ -94,6 +98,7 @@ export const CellActions: React.FC<CellActionsProps> = ({
   mode,
   showActionTooltips = true,
   visibleCellActions = 3,
+  disabledActions = [],
   metadata,
 }) => {
   const extraContentNodeRef = useRef<HTMLDivElement | null>(null);
@@ -119,6 +124,7 @@ export const CellActions: React.FC<CellActionsProps> = ({
           actionContext={actionContext}
           showActionTooltips={showActionTooltips}
           visibleCellActions={visibleCellActions}
+          disabledActions={disabledActions}
         >
           {children}
         </HoverActionsPopover>
@@ -135,6 +141,7 @@ export const CellActions: React.FC<CellActionsProps> = ({
         actionContext={actionContext}
         showActionTooltips={showActionTooltips}
         visibleCellActions={visibleCellActions}
+        disabledActions={disabledActions}
       />
       <div ref={extraContentNodeRef} />
     </div>
