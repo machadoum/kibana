@@ -53,7 +53,7 @@ import { useAlertsPrivileges } from '../../../../detections/containers/detection
 import { navTabsNetworkDetails } from './nav_tabs';
 import { NetworkDetailsTabs } from './details_tabs';
 import { useInstalledSecurityJobsIds } from '../../../../common/components/ml/hooks/use_installed_security_jobs';
-import { SECURITY_SOLUTION_ACTION_TRIGGER } from '../../../../../common/constants';
+import { CELL_ACTIONS_DEFAULT_TRIGGER } from '../../../../../common/constants';
 
 export { getTrailingBreadcrumbs } from './utils';
 
@@ -181,7 +181,7 @@ const NetworkDetailsComponent: React.FC = () => {
                   field={{ type: 'ip', value: ip, name: `${flowTarget}.ip` }}
                   mode={CellActionsMode.HOVER_POPOVER}
                   visibleCellActions={5}
-                  triggerId={SECURITY_SOLUTION_ACTION_TRIGGER}
+                  triggerId={CELL_ACTIONS_DEFAULT_TRIGGER}
                 >
                   {ip}
                 </CellActions>
