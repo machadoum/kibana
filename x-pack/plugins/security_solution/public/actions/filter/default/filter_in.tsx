@@ -14,13 +14,13 @@ import { KibanaServices } from '../../../common/lib/kibana';
 export const FILTER_IN = i18n.translate('xpack.securitySolution.actions.filterIn', {
   defaultMessage: 'Filter In',
 });
-const ID = 'security_filterIn';
+export const ACTION_ID = 'security_filterIn';
 const ICON = 'plusInCircle';
 
 export const createFilterInAction = ({ order }: { order?: number }) =>
   createAction<CellActionExecutionContext>({
-    id: ID,
-    type: ID,
+    id: ACTION_ID,
+    type: ACTION_ID,
     order,
     getIconType: (): string => ICON,
     getDisplayName: () => FILTER_IN,

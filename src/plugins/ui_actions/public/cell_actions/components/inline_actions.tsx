@@ -50,7 +50,10 @@ export const InlineActions: React.FC<InlineActionsProps> = ({
   }, [error]);
 
   return (
-    <span data-test-subj="inlineActions">
+    <span
+      data-test-subj="inlineActions"
+      className={`inlineActions ${isPopoverOpen ? 'inlineActions-popoverOpen' : ''}`}
+    >
       {visibleActions.map((action, index) => (
         <ActionItem
           key={`action-item-${index}`}
