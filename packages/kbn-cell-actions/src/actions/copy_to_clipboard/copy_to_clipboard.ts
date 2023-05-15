@@ -30,12 +30,12 @@ export const createCopyToClipboardActionFactory = createCellActionFactory(
     getDisplayName: () => COPY_TO_CLIPBOARD,
     getDisplayNameTooltip: () => COPY_TO_CLIPBOARD,
     isCompatible: async ({ field }) => field.name != null,
-    execute: async ({ field }) => {
+    execute: async ({ field, value }) => {
       let textValue: undefined | string;
-      if (field.value != null) {
-        textValue = Array.isArray(field.value)
-          ? field.value.map((value) => `"${value}"`).join(', ')
-          : `"${field.value}"`;
+      if (value != null) {
+        textValue = Array.isArray(value)
+          ? value.map((item) => `"${item}"`).join(', ')
+          : `"${value}"`;
       }
       const text = textValue ? `${field.name}: ${textValue}` : field.name;
       const isSuccess = copy(text, { debug: true });

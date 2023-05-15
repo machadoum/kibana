@@ -93,13 +93,11 @@ export const OverviewCardWithActions: React.FC<OverviewCardWithActionsProps> = (
 
       <ActionWrapper>
         <SecurityCellActions
-          field={{
-            value: enrichedFieldInfo?.values ? enrichedFieldInfo?.values[0] : '',
-            ...browserFieldToFieldSpec(
-              enrichedFieldInfo.fieldFromBrowserField,
-              enrichedFieldInfo.data
-            ),
-          }}
+          value={enrichedFieldInfo?.values ? enrichedFieldInfo?.values[0] : ''}
+          field={browserFieldToFieldSpec(
+            enrichedFieldInfo.fieldFromBrowserField,
+            enrichedFieldInfo.data
+          )}
           triggerId={SecurityCellActionsTrigger.DETAILS_FLYOUT}
           mode={CellActionsMode.INLINE}
           metadata={{ scopeId: contextId }}

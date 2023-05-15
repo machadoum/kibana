@@ -152,9 +152,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     'data-test-subj': 'hostSeverityAlertsTable-totalAlerts',
     render: (totalAlerts: number, { hostName }) => (
       <SecurityCellActions
+        value={hostName}
         field={{
           name: 'host.name',
-          value: hostName,
           type: 'keyword',
           aggregatable: true,
           searchable: true,
@@ -181,9 +181,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     render: (count: number, { hostName }) => (
       <EuiHealth data-test-subj="hostSeverityAlertsTable-critical" color={SEVERITY_COLOR.critical}>
         <SecurityCellActions
+          value={hostName}
           field={{
             name: 'host.name',
-            value: hostName,
             type: 'keyword',
             aggregatable: true,
             searchable: true,
@@ -214,9 +214,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     render: (count: number, { hostName }) => (
       <EuiHealth data-test-subj="hostSeverityAlertsTable-high" color={SEVERITY_COLOR.high}>
         <SecurityCellActions
+          value={hostName}
           field={{
             name: 'host.name',
-            value: hostName,
             type: 'keyword',
             aggregatable: true,
             searchable: true,
@@ -246,9 +246,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     render: (count: number, { hostName }) => (
       <EuiHealth data-test-subj="hostSeverityAlertsTable-medium" color={SEVERITY_COLOR.medium}>
         <SecurityCellActions
+          value={hostName}
           field={{
             name: 'host.name',
-            value: hostName,
             type: 'keyword',
             aggregatable: true,
             searchable: true,
@@ -278,9 +278,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     render: (count: number, { hostName }) => (
       <EuiHealth data-test-subj="hostSeverityAlertsTable-low" color={SEVERITY_COLOR.low}>
         <SecurityCellActions
+          value={hostName}
           field={{
             name: 'host.name',
-            value: hostName,
             type: 'keyword',
             aggregatable: true,
             searchable: true,

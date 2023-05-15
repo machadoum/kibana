@@ -150,9 +150,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     'data-test-subj': 'userSeverityAlertsTable-totalAlerts',
     render: (totalAlerts: number, { userName }) => (
       <SecurityCellActions
+        value={userName}
         field={{
           name: 'user.name',
-          value: userName,
           type: 'keyword',
           aggregatable: true,
           searchable: true,
@@ -179,9 +179,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     render: (count: number, { userName }) => (
       <EuiHealth data-test-subj="userSeverityAlertsTable-critical" color={SEVERITY_COLOR.critical}>
         <SecurityCellActions
+          value={userName}
           field={{
             name: 'user.name',
-            value: userName,
             type: 'keyword',
             aggregatable: true,
             searchable: true,
@@ -212,9 +212,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     render: (count: number, { userName }) => (
       <EuiHealth data-test-subj="userSeverityAlertsTable-high" color={SEVERITY_COLOR.high}>
         <SecurityCellActions
+          value={userName}
           field={{
             name: 'user.name',
-            value: userName,
             type: 'keyword',
             aggregatable: true,
             searchable: true,
@@ -244,9 +244,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     render: (count: number, { userName }) => (
       <EuiHealth data-test-subj="userSeverityAlertsTable-medium" color={SEVERITY_COLOR.medium}>
         <SecurityCellActions
+          value={userName}
           field={{
             name: 'user.name',
-            value: userName,
             type: 'keyword',
             aggregatable: true,
             searchable: true,
@@ -276,9 +276,9 @@ const getTableColumns: GetTableColumns = (handleClick) => [
     render: (count: number, { userName }) => (
       <EuiHealth data-test-subj="userSeverityAlertsTable-low" color={SEVERITY_COLOR.low}>
         <SecurityCellActions
+          value={userName}
           field={{
             name: 'user.name',
-            value: userName,
             type: KBN_FIELD_TYPES.STRING,
             esTypes: [ES_FIELD_TYPES.KEYWORD],
             aggregatable: true,
