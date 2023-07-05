@@ -10,6 +10,7 @@ import { act, renderHook } from '@testing-library/react-hooks';
 import { useDashboardListingTable } from './use_dashboard_listing_table';
 import { pluginServices } from '../../services/plugin_services';
 import { confirmCreateWithUnsaved } from '../confirm_overlays';
+import { DashboardSavedObjectUserContent } from '../types';
 const clearStateMock = jest.fn();
 const getDashboardUrl = jest.fn();
 const goToDashboard = jest.fn();
@@ -162,12 +163,15 @@ describe('useDashboardListingTable', () => {
     const { result } = renderHook(() =>
       useDashboardListingTable({
         getDashboardUrl,
+
         goToDashboard,
       })
     );
 
     act(() => {
-      result.current.tableListViewTableProps.deleteItems?.([{ id: 'test-id' }]);
+      result.current.tableListViewTableProps.deleteItems?.([
+        { id: 'test-id' } as unknown as DashboardSavedObjectUserContent,
+      ]);
     });
 
     expect(deleteDashboards).toHaveBeenCalled();
@@ -182,7 +186,9 @@ describe('useDashboardListingTable', () => {
     );
 
     act(() => {
-      result.current.tableListViewTableProps.editItem?.({ id: 'test-id' });
+      result.current.tableListViewTableProps.editItem?.({
+        id: 'test-id',
+      } as unknown as DashboardSavedObjectUserContent);
     });
 
     expect(goToDashboard).toHaveBeenCalled();
