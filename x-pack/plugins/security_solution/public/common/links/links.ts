@@ -153,7 +153,10 @@ const getNormalizedLink = (id: SecurityPageName): Readonly<NormalizedLink> | und
 
 const processAppLinks = (appLinks: AppLinkItems, linksPermissions: LinksPermissions): LinkItem[] =>
   appLinks.reduce<LinkItem[]>((acc, { links, ...appLinkWithoutSublinks }) => {
-    if (!isLinkExperimentalKeyAllowed(appLinkWithoutSublinks, linksPermissions)) {
+    if (
+      !isLinkExperimentalKeyAllowed(appLinkWithoutSublinks, linksPermissions) ||
+      !isLinkAdvancedSettingsAllowed(appLinkWithoutSublinks, linksPermissions)
+    ) {
       return acc;
     }
 
@@ -178,6 +181,32 @@ const processAppLinks = (appLinks: AppLinkItems, linksPermissions: LinksPermissi
     acc.push(resultAppLink);
     return acc;
   }, []);
+
+const isLinkAdvancedSettingsAllowed = (link: LinkItem, { advancedSettings }: LinksPermissions) => {
+  if (link.uiSettingRequired) {
+    if (typeof link.uiSettingRequired === 'string') {
+      const setting = advancedSettings[link.uiSettingRequired];
+      console.log(
+        'string ---------------------------',
+        setting,
+        setting.type === 'boolean' && setting.userValue === true
+      );
+      return setting.type === 'boolean' && setting.userValue === true;
+    }
+
+    if (typeof link.uiSettingRequired === 'object') {
+      const setting = advancedSettings[link.uiSettingRequired.key];
+      console.log(
+        'object ---------------------------',
+        setting,
+        setting.userValue === link.uiSettingRequired.value
+      );
+      return setting.userValue === link.uiSettingRequired.value;
+    }
+  }
+
+  return true;
+};
 
 const isLinkExperimentalKeyAllowed = (
   link: LinkItem,

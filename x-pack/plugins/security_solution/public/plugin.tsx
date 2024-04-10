@@ -374,13 +374,17 @@ export class Plugin implements IPlugin<PluginSetup, PluginStart, SetupPlugins, S
     appLinks$.next(initialAppLinks);
 
     appLinks$
-      .pipe(combineLatestWith(license$, isSolutionNavigationEnabled$))
-      .subscribe(([appLinks, license, isSolutionNavigationEnabled]) => {
+      .pipe(combineLatestWith(license$, isSolutionNavigationEnabled$, core.uiSettings.getAll$()))
+      .subscribe(([appLinks, license, isSolutionNavigationEnabled, advancedSettings]) => {
+        console.log('---- UPDATE APP LINKS ----');
+        console.log(advancedSettings);
+
         const links = isSolutionNavigationEnabled ? solutionAppLinksSwitcher(appLinks) : appLinks;
         const linksPermissions: LinksPermissions = {
           experimentalFeatures: this.experimentalFeatures,
           upselling: upsellingService,
           capabilities: core.application.capabilities,
+          advancedSettings,
           ...(license.type != null && { license }),
         };
         updateAppLinks(links, linksPermissions);

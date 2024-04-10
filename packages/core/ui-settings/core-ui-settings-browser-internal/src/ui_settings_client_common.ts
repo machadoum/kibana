@@ -51,6 +51,13 @@ export abstract class UiSettingsClientCommon implements IUiSettingsClient {
     return cloneDeep(this.cache);
   }
 
+  getAll$() {
+    return concat(
+      defer(() => of(this.getAll())),
+      this.update$.pipe(map(() => this.getAll()))
+    );
+  }
+
   get<T = any>(key: string, defaultOverride?: T) {
     const declared = this.isDeclared(key);
     if (!declared && defaultOverride !== undefined) {
@@ -173,6 +180,8 @@ You can use \`IUiSettingsClient.get("${key}", defaultValue)\`, which will just r
         this.cache[key].userValue = newValue;
       }
     }
+
+    console.log('setLocally', key, newValue, oldValue);
 
     this.update$.next({ key, newValue, oldValue });
   }

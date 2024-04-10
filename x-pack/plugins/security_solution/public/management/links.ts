@@ -15,6 +15,7 @@ import {
 } from '../../common/endpoint/service/authz';
 import {
   BLOCKLIST_PATH,
+  ENABLE_ASSET_CRITICALITY_SETTING,
   ENDPOINTS_PATH,
   ENTITY_ANALYTICS_MANAGEMENT_PATH,
   EVENT_FILTERS_PATH,
@@ -177,8 +178,9 @@ export const links: LinkItem = {
       skipUrlState: true,
       hideTimeline: true,
       capabilities: [`${SERVER_APP_ID}.entity-analytics`],
-      experimentalKey: 'riskScoringRoutesEnabled',
+      // experimentalKey: 'riskScoringRoutesEnabled',
       licenseType: 'platinum',
+      uiSettingRequired: ENABLE_ASSET_CRITICALITY_SETTING,
     },
     {
       id: SecurityPageName.responseActionsHistory,

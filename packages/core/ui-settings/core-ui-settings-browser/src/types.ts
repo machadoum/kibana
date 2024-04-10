@@ -53,6 +53,12 @@ export interface IUiSettingsClient {
   getAll: () => Readonly<Record<string, PublicUiSettingsParams & UserProvidedValues>>;
 
   /**
+   * Gets an observable of the metadata about all uiSettings, including the type, default value, and user value
+   * for each key, and all updates to any of those settings in the future.
+   */
+  getAll$: () => Observable<Readonly<Record<string, PublicUiSettingsParams & UserProvidedValues>>>;
+
+  /**
    * Sets the value for a uiSetting. If the setting is not registered by any plugin
    * it will be stored as a custom setting. The new value will be synchronously available via
    * the `get()` method and sent to the server in the background. If the request to the

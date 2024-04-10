@@ -12,6 +12,7 @@ import { Subject } from 'rxjs';
 export const clientMock = () => {
   const mock: jest.Mocked<IUiSettingsClient> = {
     getAll: jest.fn(),
+    getAll$: jest.fn(),
     get: jest.fn(),
     get$: jest.fn(),
     set: jest.fn(),
@@ -27,6 +28,7 @@ export const clientMock = () => {
   mock.get$.mockReturnValue(new Subject<any>());
   mock.getUpdate$.mockReturnValue(new Subject<any>());
   mock.getUpdateErrors$.mockReturnValue(new Subject<any>());
+  mock.getAll$.mockReturnValue(new Subject<any>());
   mock.getAll.mockReturnValue({});
   return mock;
 };

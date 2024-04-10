@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import type { Capabilities } from '@kbn/core/types';
+import type { Capabilities, UserProvidedValues } from '@kbn/core/types';
 import type { ILicense, LicenseType } from '@kbn/licensing-plugin/common/types';
 import type { IconType } from '@elastic/eui';
 import type {
@@ -19,6 +19,7 @@ import type { UpsellingService } from '@kbn/security-solution-upselling/service'
 import type { AppDeepLinkLocations } from '@kbn/core-application-browser';
 import type { Observable } from 'rxjs';
 import type { SolutionSideNavItem as ClassicSolutionSideNavItem } from '@kbn/security-solution-side-nav';
+import type { PublicUiSettingsParams } from '@kbn/core/public';
 import type { ExperimentalFeatures } from '../../../common/experimental_features';
 import type { RequiredCapabilities } from '../lib/capabilities';
 
@@ -37,6 +38,7 @@ export type SolutionSideNavItem = ClassicSolutionSideNavItem<SolutionPageName>;
 export interface LinksPermissions {
   capabilities: Capabilities;
   experimentalFeatures: Readonly<ExperimentalFeatures>;
+  advancedSettings: Record<string, PublicUiSettingsParams & UserProvidedValues>;
   upselling: UpsellingService;
   license?: ILicense;
 }
@@ -154,6 +156,13 @@ export interface LinkItem {
    * Locations where the link is visible in the UI
    */
   visibleIn?: AppDeepLinkLocations[];
+
+  /**
+   * Required UI setting to enable the link.
+   * If you wanna enable the link when a boolean UiSetting is true, you can pass the key as a string.
+   * If you wanna enable the link when a specific value is set for a UiSetting, you can pass an object with the key and value.
+   */
+  uiSettingRequired?: string | { key: string; value: string | number | boolean };
 }
 
 export type AppLinkItems = Readonly<LinkItem[]>;
