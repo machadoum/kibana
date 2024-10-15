@@ -38,7 +38,6 @@ export const enrichEvents: EnrichEventsFunction = async ({
 
     logger.debug('Alert enrichments started');
     const isNewRiskScoreModuleAvailable = experimentalFeatures?.riskScoringRoutesEnabled ?? false;
-    const { uiSettingsClient } = services;
 
     let isNewRiskScoreModuleInstalled = false;
     if (isNewRiskScoreModuleAvailable) {

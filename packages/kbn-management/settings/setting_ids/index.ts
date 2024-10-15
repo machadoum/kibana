@@ -183,8 +183,6 @@ export const SECURITY_SOLUTION_SHOW_RELATED_INTEGRATIONS_ID =
   'securitySolution:showRelatedIntegrations';
 export const SECURITY_SOLUTION_DEFAULT_ALERT_TAGS_KEY = 'securitySolution:alertTags' as const;
 /** This Kibana Advanced Setting allows users to enable/disable the Asset Criticality feature */
-export const SECURITY_SOLUTION_ENABLE_ASSET_CRITICALITY_SETTING =
-  'securitySolution:enableAssetCriticality' as const;
 export const SECURITY_SOLUTION_ENABLE_VISUALIZATIONS_IN_FLYOUT_SETTING =
   'securitySolution:enableVisualizationsInFlyout' as const;
 

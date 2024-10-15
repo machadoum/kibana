@@ -75,7 +75,6 @@ export interface UsageStats {
   'securitySolution:defaultAnomalyScore': number;
   'securitySolution:refreshIntervalDefaults': string;
   'securitySolution:enableNewsFeed': boolean;
-  'securitySolution:enableAssetCriticality': boolean;
   'securitySolution:excludeColdAndFrozenTiersInAnalyzer': boolean;
   'securitySolution:enableCcsWarning': boolean;
   'securitySolution:enableVisualizationsInFlyout': boolean;
