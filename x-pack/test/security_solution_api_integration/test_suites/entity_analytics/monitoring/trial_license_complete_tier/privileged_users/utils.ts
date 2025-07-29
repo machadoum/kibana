@@ -12,14 +12,17 @@ import {
 import { API_VERSIONS } from '@kbn/security-solution-plugin/common/constants';
 import { routeWithNamespace } from '../../../../../../common/utils/security_solution';
 import { FtrProviderContext } from '../../../../../ftr_provider_context';
+import { waitFor } from '../../../../../../common/utils/security_solution';
 
 export const PrivMonUtils = (
   getService: FtrProviderContext['getService'],
   namespace: string = 'default'
 ) => {
+  const TASK_ID = 'entity_analytics:monitoring:privileges:engine:default:1.0.0';
   const api = getService('securitySolutionApi');
   const log = getService('log');
   const supertest = getService('supertest');
+  const kibanaServer = getService('kibanaServer');
 
   log.info(`Monitoring: Privileged Users: Using namespace ${namespace}`);
 
@@ -62,5 +65,28 @@ export const PrivMonUtils = (
     }
   };
 
-  return { initPrivMonEngine, bulkUploadUsersCsv, retry };
+  const waitForSyncTaskRun = async (): Promise<void> => {
+    const initialTime = new Date();
+
+    await waitFor(
+      async () => {
+        const task = await kibanaServer.savedObjects.get({
+          type: 'task',
+          id: TASK_ID,
+        });
+        const runAtTime = task.attributes.runAt;
+
+        return !!runAtTime && new Date(runAtTime) > initialTime;
+      },
+      'waitForSyncTaskRun',
+      log
+    );
+  };
+
+  return {
+    initPrivMonEngine,
+    bulkUploadUsersCsv,
+    retry,
+    waitForSyncTaskRun,
+  };
 };

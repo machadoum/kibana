@@ -5,7 +5,12 @@
  * 2.0.
  */
 
-import type { CoreStart, Logger, AnalyticsServiceSetup } from '@kbn/core/server';
+import {
+  type CoreStart,
+  type Logger,
+  type AnalyticsServiceSetup,
+  SECURITY_EXTENSION_ID,
+} from '@kbn/core/server';
 import type {
   ConcreteTaskInstance,
   TaskManagerSetupContract,
@@ -218,6 +223,7 @@ const runPrivilegeMonitoringTask = async ({
     });
     const soClient = core.savedObjects.getScopedClient(request, {
       includedHiddenTypes: [PrivilegeMonitoringApiKeyType.name, monitoringEntitySourceType.name],
+      excludedExtensions: [SECURITY_EXTENSION_ID],
     });
     await dataSourcesService.plainIndexSync(soClient);
   } catch (e) {
