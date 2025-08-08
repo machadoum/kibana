@@ -49,9 +49,11 @@ export const bulkUpsertOperationsFactory =
               }
 
               ctx._source.user.is_privileged = true;
+              ctx._source.@timestamp = params.timestamp;
             `,
               params: {
                 source_id: user.sourceId,
+                timestamp: new Date().toISOString(),
               },
             },
           }
@@ -62,6 +64,7 @@ export const bulkUpsertOperationsFactory =
         ops.push(
           { index: { _index: userIndexName } },
           {
+            '@timestamp': new Date().toISOString(),
             user: { name: user.username, is_privileged: true },
             labels: {
               sources: ['index'],

@@ -49,9 +49,11 @@ export const bulkSoftDeleteOperationsFactory =
             if (ctx._source.labels?.sources == null || ctx._source.labels.sources.isEmpty()) {
               ctx._source.user.is_privileged = false;
             }
+            ctx._source.@timestamp = params.timestamp;
           `,
             params: {
               source_id: user.sourceId,
+              timestamp: new Date().toISOString(),
             },
           },
         }
