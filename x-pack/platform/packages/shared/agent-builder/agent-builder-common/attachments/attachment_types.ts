@@ -17,6 +17,7 @@ export enum AttachmentType {
   text = 'text',
   esql = 'esql',
   visualization = 'visualization',
+  memoryCounter = 'memory_counter',
 }
 
 interface AttachmentDataMap {
@@ -24,6 +25,7 @@ interface AttachmentDataMap {
   [AttachmentType.text]: TextAttachmentData;
   [AttachmentType.screenContext]: ScreenContextAttachmentData;
   [AttachmentType.visualization]: VisualizationAttachmentData;
+  [AttachmentType.memoryCounter]: MemoryCounterAttachmentData;
 }
 
 export const esqlAttachmentDataSchema = z.object({
@@ -130,3 +132,22 @@ export interface VisualizationAttachmentData {
 }
 
 export type AttachmentDataOf<Type extends AttachmentType> = AttachmentDataMap[Type];
+
+export const memoryCounterAttachmentDataSchema = z.object({
+  value: z.number().int(),
+});
+
+/**
+ * Data for a memory counter attachment (current value).
+ */
+export interface MemoryCounterAttachmentData {
+  value: number | undefined;
+}
+
+/** Counter store key — same string used with update_memory_counter. */
+export const memoryCounterOriginDataSchema = z.string().min(1);
+
+/**
+ * Origin for a memory counter attachment: the in-memory store key.
+ */
+export type MemoryCounterOriginData = z.infer<typeof memoryCounterOriginDataSchema>;

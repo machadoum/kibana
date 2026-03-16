@@ -13,6 +13,7 @@ export type {
   ScreenContextAttachment,
   EsqlAttachment,
   VisualizationAttachment,
+  MemoryCounterAttachment,
 } from './attachments';
 
 export type { StaleAttachment, FreshAttachment, AttachmentStaleCheckResult } from './stale_check';
@@ -22,12 +23,16 @@ export {
   esqlAttachmentDataSchema,
   screenContextAttachmentDataSchema,
   visualizationAttachmentDataSchema,
+  memoryCounterAttachmentDataSchema,
+  memoryCounterOriginDataSchema,
   type TextAttachmentData,
   type ScreenContextAttachmentData,
   type TimeRange,
   screenContextTimeRangeSchema,
   type EsqlAttachmentData,
   type VisualizationAttachmentData,
+  type MemoryCounterAttachmentData,
+  type MemoryCounterOriginData,
 } from './attachment_types';
 
 export type {

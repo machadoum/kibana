@@ -16,6 +16,7 @@ import { ConversationRoundStatus, attachmentTools } from '@kbn/agent-builder-com
 import { hashContent } from '@kbn/agent-builder-common/attachments';
 import { ConversationRoundStepType } from '@kbn/agent-builder-common';
 import { ToolResultType } from '@kbn/agent-builder-common/tools/tool_result';
+import { hashContent } from '@kbn/agent-builder-common/attachments';
 import { registerAttachmentRoutes } from './attachments';
 import type { RouteDependencies } from './types';
 

@@ -11,6 +11,8 @@ import { createTextAttachmentType } from './text';
 import { createEsqlAttachmentType } from './esql';
 import { createScreenContextAttachmentType } from './screen_context';
 import { createVisualizationAttachmentType } from './visualization';
+import { createMemoryCounterAttachmentType } from './memory_counter';
+import { memoryCounterStore } from './memory_counter_store';
 import type {
   AgentBuilderPlatformPluginStart,
   PluginSetupDependencies,
@@ -31,9 +33,14 @@ export const registerAttachmentTypes = ({
     createScreenContextAttachmentType(),
     createEsqlAttachmentType(),
     createVisualizationAttachmentType(),
+    createMemoryCounterAttachmentType(),
   ];
 
   attachmentTypes.forEach((attachmentType) => {
     agentBuilder.attachments.registerType(attachmentType);
+  });
+
+  agentBuilder.attachments.registerMemoryCounterPersist?.((key, value) => {
+    memoryCounterStore.set(key, value);
   });
 };

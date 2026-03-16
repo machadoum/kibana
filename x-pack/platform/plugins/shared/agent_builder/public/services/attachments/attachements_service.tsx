@@ -95,4 +95,20 @@ export class AttachmentsService {
       `${publicApiPath}/conversations/${conversationId}/attachments/stale`
     );
   }
+
+  /**
+   * Persists a memory counter value to the server-side store for the attachment identified by
+   * `attachmentId`. The server loads that attachment and uses its stored `origin` (counter key);
+   * the client does not send the key on this request.
+   */
+  async persistMemoryCounterValue(
+    conversationId: string,
+    attachmentId: string,
+    value: number
+  ): Promise<void> {
+    await this.http.post(
+      `${publicApiPath}/conversations/${conversationId}/attachments/${attachmentId}/memory_counter_persist`,
+      { body: JSON.stringify({ value }) }
+    );
+  }
 }

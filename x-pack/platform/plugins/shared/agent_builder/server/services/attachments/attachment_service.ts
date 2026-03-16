@@ -9,7 +9,11 @@ import {
   createAttachmentTypeRegistry,
   type AttachmentTypeRegistry,
 } from './attachment_type_registry';
-import type { AttachmentServiceSetup, AttachmentServiceStart } from './types';
+import type {
+  AttachmentServiceSetup,
+  AttachmentServiceStart,
+  MemoryCounterPersistHandler,
+} from './types';
 import { validateAttachment } from './validate_attachment';
 
 export interface AttachmentService {
@@ -23,6 +27,7 @@ export const createAttachmentService = (): AttachmentService => {
 
 export class AttachmentServiceImpl implements AttachmentService {
   readonly attachmentTypeRegistry: AttachmentTypeRegistry;
+  private memoryCounterPersistHandler?: MemoryCounterPersistHandler;
 
   constructor() {
     this.attachmentTypeRegistry = createAttachmentTypeRegistry();
@@ -31,6 +36,9 @@ export class AttachmentServiceImpl implements AttachmentService {
   setup(): AttachmentServiceSetup {
     return {
       registerType: (attachmentType) => this.attachmentTypeRegistry.register(attachmentType),
+      registerMemoryCounterPersist: (handler: MemoryCounterPersistHandler) => {
+        this.memoryCounterPersistHandler = handler;
+      },
     };
   }
 
@@ -45,6 +53,7 @@ export class AttachmentServiceImpl implements AttachmentService {
       getRegisteredTypeIds: () => {
         return this.attachmentTypeRegistry.list().map((def) => def.id);
       },
+      getMemoryCounterPersistHandler: () => this.memoryCounterPersistHandler,
     };
   }
 }

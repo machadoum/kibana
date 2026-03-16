@@ -24,6 +24,7 @@ import { executeEsqlTool } from './execute_esql';
 import { searchTool } from './search';
 import { createVisualizationTool } from './create_visualization';
 import { getWorkflowExecutionStatusTool } from './get_workflow_execution_status';
+import { updateMemoryCounterTool } from './update_memory_counter';
 
 export const registerTools = ({
   coreSetup,
@@ -43,6 +44,7 @@ export const registerTools = ({
     listIndicesTool(),
     indexExplorerTool(),
     createVisualizationTool(),
+    updateMemoryCounterTool(),
     productDocumentationTool(coreSetup),
     integrationKnowledgeTool(coreSetup),
     casesTool(coreSetup),

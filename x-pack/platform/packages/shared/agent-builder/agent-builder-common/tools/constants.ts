@@ -30,6 +30,8 @@ export const platformCoreTools = {
   productDocumentation: platformCoreTool('product_documentation'),
   cases: platformCoreTool('cases'),
   integrationKnowledge: platformCoreTool('integration_knowledge'),
+  updateMemoryCounter: platformCoreTool('update_memory_counter'),
+  addMemoryCounterAttachment: platformCoreTool('add_memory_counter_attachment'),
 } as const;
 
 export const attachmentTools = {

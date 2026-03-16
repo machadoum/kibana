@@ -42,6 +42,7 @@ import { useAgentBuilderServices } from '../../hooks/use_agent_builder_service';
 import { useConversationContext } from '../../context/conversation/conversation_context';
 import { StaleAttachmentsPanel } from './stale_attachments_panel';
 import { useStaleAttachments } from '../../hooks/use_stale_attachments_check';
+import { MemoryCounterPersistProvider } from '../../context/memory_counter_persist_context';
 
 export const Conversation: React.FC<{}> = () => {
   const { euiTheme } = useEuiTheme();
@@ -53,7 +54,11 @@ export const Conversation: React.FC<{}> = () => {
   const shouldStickToBottom = useShouldStickToBottom();
   const onAppLeave = useAppLeave();
   const { attachmentsService } = useAgentBuilderServices();
-  const { attachments: stagedAttachments = [], upsertAttachments } = useConversationContext();
+  const {
+    attachments: stagedAttachments = [],
+    upsertAttachments,
+    conversationActions,
+  } = useConversationContext();
   const { staleAttachments, scheduleStaleCheck } = useStaleAttachments(conversationId);
   const [dismissStaleAttachments, setDismissStaleAttachments] = useState(false);
   useSendPredefinedInitialMessage();
@@ -93,6 +98,16 @@ export const Conversation: React.FC<{}> = () => {
   useEffect(() => {
     setDismissStaleAttachments(false);
   }, [staleAttachments, conversationId]);
+
+  const persistMemoryCounter = useCallback(
+    async (attachmentId: string, origin: string, value: number) => {
+      if (!conversationId) return;
+      await attachmentsService.persistMemoryCounterValue(conversationId, attachmentId, value);
+      await attachmentsService.updateOrigin(conversationId, attachmentId, origin);
+      conversationActions.invalidateConversation();
+    },
+    [conversationId, attachmentsService, conversationActions]
+  );
 
   // Stick to bottom only when user returns to an existing conversation (conversationId is defined and changes)
   useEffect(() => {
@@ -152,40 +167,45 @@ export const Conversation: React.FC<{}> = () => {
   }
 
   return (
-    <CanvasProvider>
-      <EuiFlexGroup direction="column" alignItems="center" css={containerStyles} gutterSize="s">
-        <EuiFlexItem grow={true} css={scrollWrapperStyles}>
-          <EuiFlexGroup
-            direction="column"
-            alignItems="center"
-            ref={scrollContainerRef}
-            css={scrollableStyles}
+    <MemoryCounterPersistProvider
+      conversationId={conversationId ?? undefined}
+      persistMemoryCounter={persistMemoryCounter}
+    >
+      <CanvasProvider>
+        <EuiFlexGroup direction="column" alignItems="center" css={containerStyles} gutterSize="s">
+          <EuiFlexItem grow={true} css={scrollWrapperStyles}>
+            <EuiFlexGroup
+              direction="column"
+              alignItems="center"
+              ref={scrollContainerRef}
+              css={scrollableStyles}
+            >
+              <EuiFlexItem css={[conversationElementWidthStyles, conversationElementPaddingStyles]}>
+                <ConversationRounds scrollContainerHeight={scrollContainerHeight} />
+              </EuiFlexItem>
+            </EuiFlexGroup>
+            {showScrollButton && <ScrollButton onClick={smoothScrollToBottom} />}
+          </EuiFlexItem>
+          <EuiFlexItem
+            css={[
+              conversationElementWidthStyles,
+              conversationElementPaddingStyles,
+              inputPaddingStyles,
+            ]}
+            grow={false}
           >
-            <EuiFlexItem css={[conversationElementWidthStyles, conversationElementPaddingStyles]}>
-              <ConversationRounds scrollContainerHeight={scrollContainerHeight} />
-            </EuiFlexItem>
-          </EuiFlexGroup>
-          {showScrollButton && <ScrollButton onClick={smoothScrollToBottom} />}
-        </EuiFlexItem>
-        <EuiFlexItem
-          css={[
-            conversationElementWidthStyles,
-            conversationElementPaddingStyles,
-            inputPaddingStyles,
-          ]}
-          grow={false}
-        >
-          {!dismissStaleAttachments && (
-            <StaleAttachmentsPanel
-              attachmentInputs={staleAttachmentInputs}
-              onAddToInput={handleStageStaleAttachments}
-              onDismiss={() => setDismissStaleAttachments(true)}
-            />
-          )}
-          <ConversationInput onSubmit={scrollToMostRecentRoundTop} onFocus={scheduleStaleCheck} />
-        </EuiFlexItem>
-      </EuiFlexGroup>
-      <CanvasFlyout attachmentsService={attachmentsService} />
-    </CanvasProvider>
+            {!dismissStaleAttachments && (
+              <StaleAttachmentsPanel
+                attachmentInputs={staleAttachmentInputs}
+                onAddToInput={handleStageStaleAttachments}
+                onDismiss={() => setDismissStaleAttachments(true)}
+              />
+            )}
+            <ConversationInput onSubmit={scrollToMostRecentRoundTop} onFocus={scheduleStaleCheck} />
+          </EuiFlexItem>
+        </EuiFlexGroup>
+        <CanvasFlyout attachmentsService={attachmentsService} />
+      </CanvasProvider>
+    </MemoryCounterPersistProvider>
   );
 };

@@ -32,7 +32,7 @@ export const createAttachmentUpdateTool = ({
   id: attachmentTools.update,
   type: ToolType.builtin,
   description:
-    'Update the content of an existing attachment. This creates a new version if the content changed. Use this to modify data you previously stored.',
+    'Update the content of an existing attachment. Requires attachment_id (string) and data (JSON object). For memory_counter attachments, use this tool with data: { value: number } to change the counter (creates a new version). Use update_memory_counter only when you need to update the store without changing the attachment (e.g. to simulate stale state).',
   schema: attachmentUpdateSchema,
   tags: ['attachment'],
   handler: async ({ attachment_id: attachmentId, data, description }) => {

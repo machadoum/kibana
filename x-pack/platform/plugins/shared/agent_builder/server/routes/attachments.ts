@@ -12,7 +12,7 @@ import type { UpdateOriginResponse } from '@kbn/agent-builder-common/attachments
 import { isToolCallStep, attachmentTools } from '@kbn/agent-builder-common';
 import type { AttachmentResolveContext } from '@kbn/agent-builder-server/attachments';
 import { createAttachmentStateManager } from '@kbn/agent-builder-server/attachments';
-import { ATTACHMENT_REF_ACTOR } from '@kbn/agent-builder-common/attachments';
+import { ATTACHMENT_REF_ACTOR, AttachmentType } from '@kbn/agent-builder-common/attachments';
 import type { RouteDependencies } from './types';
 import { getHandlerWrapper } from './wrap_handler';
 import type {
@@ -435,6 +435,84 @@ export function registerAttachmentRoutes({
             new_version: updated.current_version,
           },
         });
+      })
+    );
+
+  // Persist memory counter value to the store. Only called when the user clicks Save in the UI (never on create/add).
+  router.versioned
+    .post({
+      path: `${publicApiPath}/conversations/{conversation_id}/attachments/{attachment_id}/memory_counter_persist`,
+      security: {
+        authz: { requiredPrivileges: [apiPrivileges.readAgentBuilder] },
+      },
+      access: 'public',
+      summary: 'Persist memory counter value to store',
+      description:
+        'Writes the given value to the in-memory store for the counter key. Used when the user clicks Save on a memory counter attachment (e.g. an old version to simulate stale state).',
+      options: {
+        tags: ['attachment', 'oas-tag:agent builder'],
+        availability: {
+          stability: 'experimental',
+          since: '9.4.0',
+        },
+      },
+    })
+    .addVersion(
+      {
+        version: '2023-10-31',
+        validate: {
+          request: {
+            params: schema.object({
+              conversation_id: schema.string(),
+              attachment_id: schema.string(),
+            }),
+            body: schema.object({
+              value: schema.number({ min: 0 }),
+            }),
+          },
+        },
+      },
+      wrapHandler(async (ctx, request, response) => {
+        const { conversations: conversationsService, attachments: attachmentsService } =
+          getInternalServices();
+        const { conversation_id: conversationId, attachment_id: attachmentId } = request.params;
+        const { value } = request.body;
+
+        const persistHandler = attachmentsService.getMemoryCounterPersistHandler();
+        if (!persistHandler) {
+          return response.badRequest({
+            body: {
+              message:
+                'Memory counter persist is not registered (platform attachment type may not be loaded).',
+            },
+          });
+        }
+
+        const client = await conversationsService.getScopedClient({ request });
+        const conversation = await client.get(conversationId);
+        const attachment = (conversation.attachments ?? []).find((a) => a.id === attachmentId);
+
+        if (!attachment) {
+          return response.notFound({
+            body: { message: `Attachment '${attachmentId}' not found` },
+          });
+        }
+
+        if (attachment.type !== AttachmentType.memoryCounter) {
+          return response.badRequest({
+            body: { message: `Attachment '${attachmentId}' is not a memory_counter attachment` },
+          });
+        }
+
+        const origin = attachment.origin;
+        if (!origin) {
+          return response.badRequest({
+            body: { message: `Attachment '${attachmentId}' has no origin` },
+          });
+        }
+
+        persistHandler(origin, Math.floor(value));
+        return response.ok({ body: { origin, value: Math.floor(value) } });
       })
     );
 

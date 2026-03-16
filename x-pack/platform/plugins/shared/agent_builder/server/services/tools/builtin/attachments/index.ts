@@ -10,6 +10,7 @@ import type { BuiltinToolDefinition } from '@kbn/agent-builder-server';
 import { createAttachmentReadTool } from './attachment_read';
 import { createAttachmentUpdateTool } from './attachment_update';
 import { createAttachmentAddTool } from './attachment_add';
+import { createCounterTool } from './add_memory_counter_attachment';
 import { createAttachmentListTool } from './attachment_list';
 import { createAttachmentDiffTool } from './attachment_diff';
 import type { AttachmentToolsOptions } from './types';
@@ -37,6 +38,7 @@ export const createAttachmentTools = (
     createAttachmentReadTool(options),
     createAttachmentUpdateTool(options),
     createAttachmentAddTool(options),
+    createCounterTool(options),
     createAttachmentListTool(options),
     createAttachmentDiffTool(options),
   ];

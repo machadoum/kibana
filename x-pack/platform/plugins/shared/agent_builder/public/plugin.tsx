@@ -13,6 +13,7 @@ import {
   type AppUpdater,
 } from '@kbn/core/public';
 import type { Logger } from '@kbn/logging';
+import { AttachmentType } from '@kbn/agent-builder-common/attachments';
 import { BehaviorSubject } from 'rxjs';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -56,6 +57,7 @@ import {
 } from './sidebar';
 import { createVisualizationAttachmentDefinition } from './application/components/attachments/visualization_attachment';
 import type { ConverseAttachmentInput } from '../common/http_api/chat';
+import { createMemoryCounterAttachmentDefinition } from './application/components/attachments/memory_counter_attachment';
 
 export class AgentBuilderPlugin
   implements
@@ -135,6 +137,11 @@ export class AgentBuilderPlugin
     attachmentsService.addAttachmentType(
       'visualization',
       createVisualizationAttachmentDefinition({ startDependencies })
+    );
+
+    attachmentsService.addAttachmentType(
+      AttachmentType.memoryCounter,
+      createMemoryCounterAttachmentDefinition()
     );
 
     const eventsService = new EventsService();

@@ -65,6 +65,10 @@ export interface AttachmentsSetup {
    * Register an attachment type to be available in agentBuilder.
    */
   registerType: AttachmentServiceSetup['registerType'];
+  /**
+   * Register a handler to persist a memory counter value to the store (used by platform).
+   */
+  registerMemoryCounterPersist?: AttachmentServiceSetup['registerMemoryCounterPersist'];
 }
 
 export interface SkillsSetup {
