@@ -7,12 +7,16 @@
 
 import type { CoreStart } from '@kbn/core/server';
 import type { Logger } from '@kbn/logging';
-import type { tracing } from '@elastic/opentelemetry-node/sdk';
+import { core as otelCore, node, tracing } from '@elastic/opentelemetry-node/sdk';
 import { SavedObjectsClient } from '@kbn/core/server';
 import { LateBindingSpanProcessor, ElasticsearchOtlpExporter } from '@kbn/tracing';
 import { AGENT_BUILDER_EXPERIMENTAL_FEATURES_SETTING_ID } from '@kbn/management-settings-ids';
+import { BAGGAGE_TRACKING_BEACON_KEY, BAGGAGE_TRACKING_BEACON_VALUE } from '@kbn/inference-tracing';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-proto';
 import { LRUCache } from 'lru-cache';
+import { context, propagation, trace } from '@opentelemetry/api';
+import type { Attributes, Context, Link, SpanKind } from '@opentelemetry/api';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import type { AgentBuilderConfig } from '../config';
 import { AgentBuilderSpanProcessor } from './agent_builder_span_processor';
 
@@ -75,6 +79,88 @@ const buildExporters = (
   ];
 };
 
+/**
+ * Sampler that drops everything except inference spans (identified by
+ * the `kibana.inference.tracing` baggage entry). This keeps the standalone
+ * provider from creating HTTP or other unwanted spans.
+ */
+class InferenceOnlySampler implements tracing.Sampler {
+  shouldSample(
+    ctx: Context,
+    _traceId: string,
+    _spanName: string,
+    _spanKind: SpanKind,
+    _attributes: Attributes,
+    _links: Link[]
+  ): tracing.SamplingResult {
+    const baggage = propagation.getBaggage(ctx);
+    const isInference =
+      baggage?.getEntry(BAGGAGE_TRACKING_BEACON_KEY)?.value === BAGGAGE_TRACKING_BEACON_VALUE;
+
+    return {
+      decision: isInference ? tracing.SamplingDecision.RECORD : tracing.SamplingDecision.NOT_RECORD,
+    };
+  }
+
+  toString(): string {
+    return 'InferenceOnlySampler';
+  }
+}
+
+/**
+ * When `telemetry.tracing.enabled` is false, the global TracerProvider is the
+ * OTel no-op default — `trace.getTracer('inference')` returns a no-op tracer
+ * and no spans are created.
+ *
+ * This function installs a minimal standalone TracerProvider so that inference
+ * spans are recorded and exported without enabling full Kibana HTTP tracing.
+ * The InferenceOnlySampler ensures only inference-context spans are recorded;
+ * everything else (HTTP, ES transport, etc.) is dropped by the sampler.
+ *
+ * If the global provider was already initialized by `initTracing` (i.e.
+ * `telemetry.tracing.enabled: true`), this is a no-op — processors are
+ * registered on the existing LateBindingSpanProcessor instead.
+ */
+const ensureTracingInfrastructure = (
+  processors: tracing.SpanProcessor[],
+  logger: Logger
+): (() => Promise<void>) | undefined => {
+  const hasGlobalProvider = LateBindingSpanProcessor.hasInstance();
+
+  if (hasGlobalProvider) {
+    logger.debug('Global tracing provider already initialized, using LateBindingSpanProcessor');
+    const tearDowns = processors.map((processor) => LateBindingSpanProcessor.register(processor));
+    return async () => {
+      await Promise.all(tearDowns.map((teardown) => teardown()));
+    };
+  }
+
+  logger.info(
+    'Global tracing not enabled — installing standalone TracerProvider for inference spans'
+  );
+
+  const contextManager = new AsyncLocalStorageContextManager();
+  context.setGlobalContextManager(contextManager);
+  contextManager.enable();
+
+  propagation.setGlobalPropagator(
+    new otelCore.CompositePropagator({
+      propagators: [new otelCore.W3CTraceContextPropagator(), new otelCore.W3CBaggagePropagator()],
+    })
+  );
+
+  const provider = new node.NodeTracerProvider({
+    sampler: new InferenceOnlySampler(),
+    spanProcessors: processors,
+  });
+
+  trace.setGlobalTracerProvider(provider);
+
+  return async () => {
+    await provider.shutdown();
+  };
+};
+
 export const registerTracingExporter = async ({
   core,
   tracingConfig,
@@ -92,16 +178,14 @@ export const registerTracingExporter = async ({
 
   const isEnabled = await createCachedIsEnabled(core, logger);
 
-  const tearDowns = exporters.map((exporter) => {
-    const processor = new AgentBuilderSpanProcessor({
-      exporter,
-      scheduledDelayMillis: tracingConfig.scheduledDelay,
-      isEnabled,
-    });
-    return LateBindingSpanProcessor.register(processor);
-  });
+  const processors = exporters.map(
+    (exporter) =>
+      new AgentBuilderSpanProcessor({
+        exporter,
+        scheduledDelayMillis: tracingConfig.scheduledDelay,
+        isEnabled,
+      })
+  );
 
-  return async () => {
-    await Promise.all(tearDowns.map((teardown) => teardown()));
-  };
+  return ensureTracingInfrastructure(processors, logger);
 };

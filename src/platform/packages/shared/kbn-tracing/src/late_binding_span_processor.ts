@@ -53,6 +53,15 @@ export class LateBindingSpanProcessor implements tracing.SpanProcessor {
     return this.#instance?.register(processor) ?? noop;
   }
 
+  /**
+   * Returns true if the singleton was already created by {@link get()},
+   * which happens when `initTracing` runs. Consumers can use this to
+   * detect whether global tracing infrastructure is available.
+   */
+  static hasInstance(): boolean {
+    return this.#instance !== undefined;
+  }
+
   static get() {
     if (!this.#instance) {
       this.#instance = new LateBindingSpanProcessor();
