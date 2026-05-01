@@ -18278,7 +18278,6 @@ paths:
         '200':
           content:
             application/json:
-              description: Elasticsearch update by query or update by IDs response
               examples:
                 add:
                   value:
@@ -18297,7 +18296,13 @@ paths:
                     total: 1
                     updated: 1
                     version_conflicts: 0
-          description: Indicates a successful call.
+              schema:
+                additionalProperties: true
+                description: Elasticsearch update by query response
+                type: object
+          description: |
+            Indicates a successful call. The body matches an Elasticsearch update-by-query response
+            (for example `took`, `updated`, `failures`).
         '400':
           content:
             application/json:
@@ -25369,16 +25374,18 @@ paths:
       requestBody:
         content:
           application/json:
+            examples:
+              createSharedExceptionList:
+                value:
+                  description: This is a sample detection type exception list.
+                  list_id: simple_list
+                  name: Sample Detection Exception List
+                  namespace_type: single
+                  os_types:
+                    - linux
+                  tags:
+                    - malware
             schema:
-              example:
-                description: This is a sample detection type exception list.
-                list_id: simple_list
-                name: Sample Detection Exception List
-                namespace_type: single
-                os_types:
-                  - linux
-                tags:
-                  - malware
               type: object
               properties:
                 description:
@@ -41347,6 +41354,128 @@ paths:
       x-metaTags:
         - content: Kibana, Elastic Cloud Serverless
           name: product_name
+  /api/fleet/enrollment_api_keys/_bulk_delete:
+    post:
+      description: |-
+        **Spaces method and path for this operation:**
+
+        <div><span class="operation-verb post">post</span>&nbsp;<span class="operation-path">/s/{space_id}/api/fleet/enrollment_api_keys/_bulk_delete</span></div>
+
+        Refer to [Spaces](https://www.elastic.co/docs/deploy-manage/manage-spaces) for more information.
+
+        Revoke or delete multiple enrollment API keys.<br/><br/>[Required authorization] Route required privileges: fleet-agents-all.
+      operationId: post-fleet-enrollment-api-keys-bulk-delete
+      parameters:
+        - description: A required header to protect against CSRF attacks
+          in: header
+          name: kbn-xsrf
+          required: true
+          schema:
+            example: 'true'
+            type: string
+      requestBody:
+        content:
+          application/json:
+            examples:
+              bulkDeleteByIdsExample:
+                description: Bulk delete enrollment API keys by IDs
+                value:
+                  forceDelete: true
+                  tokenIds:
+                    - token-id-1
+                    - token-id-2
+              bulkDeleteByKueryExample:
+                description: Bulk delete enrollment API keys by KQL query
+                value:
+                  forceDelete: false
+                  kuery: policy_id:"policy-id-1"
+            schema:
+              additionalProperties: false
+              type: object
+              properties:
+                forceDelete:
+                  default: false
+                  description: When false (default), invalidate the API key and mark the token as inactive. When true, also delete the token document.
+                  type: boolean
+                includeHidden:
+                  default: false
+                  description: When true, allow deletion of hidden enrollment tokens (managed/agentless policies). Defaults to false.
+                  type: boolean
+                kuery:
+                  description: KQL query to select enrollment tokens to delete.
+                  type: string
+                tokenIds:
+                  description: List of enrollment token IDs to delete.
+                  items:
+                    type: string
+                  maxItems: 10000
+                  type: array
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                bulkDeleteEnrollmentApiKeysExample:
+                  description: The enrollment API keys were successfully processed
+                  value:
+                    action: deleted
+                    count: 2
+                    errorCount: 0
+                    successCount: 2
+              schema:
+                additionalProperties: false
+                type: object
+                properties:
+                  action:
+                    type: string
+                  count:
+                    type: number
+                  errorCount:
+                    type: number
+                  successCount:
+                    type: number
+                required:
+                  - action
+                  - count
+                  - successCount
+                  - errorCount
+          description: Successful response
+        '400':
+          content:
+            application/json:
+              examples:
+                genericErrorResponseExample:
+                  description: Example of a generic error response
+                  value:
+                    error: Bad Request
+                    message: Either tokenIds or kuery must be provided
+                    statusCode: 400
+              schema:
+                additionalProperties: false
+                description: Generic Error
+                type: object
+                properties:
+                  attributes:
+                    nullable: true
+                  error:
+                    type: string
+                  errorType:
+                    type: string
+                  message:
+                    type: string
+                  statusCode:
+                    type: number
+                required:
+                  - message
+                  - attributes
+          description: Bad Request
+      summary: Bulk revoke or delete enrollment API keys
+      tags:
+        - Fleet enrollment API keys
+      x-state: Generally available
+      x-metaTags:
+        - content: Kibana, Elastic Cloud Serverless
+          name: product_name
   /api/fleet/enrollment_api_keys/{keyId}:
     delete:
       description: |-
@@ -41356,7 +41485,7 @@ paths:
 
         Refer to [Spaces](https://www.elastic.co/docs/deploy-manage/manage-spaces) for more information.
 
-        Revoke an enrollment API key by ID by marking it as inactive.<br/><br/>[Required authorization] Route required privileges: fleet-agents-all.
+        Revoke or delete an enrollment API key by ID. Use `forceDelete=true` to remove the document.<br/><br/>[Required authorization] Route required privileges: fleet-agents-all.
       operationId: delete-fleet-enrollment-api-keys-keyid
       parameters:
         - description: A required header to protect against CSRF attacks
@@ -41372,6 +41501,20 @@ paths:
           required: true
           schema:
             type: string
+        - description: When false (default), invalidate the API key and mark the token as inactive. When true, also delete the token document.
+          in: query
+          name: forceDelete
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - description: When true, allow deletion of hidden enrollment tokens (managed/agentless policies). Defaults to false.
+          in: query
+          name: includeHidden
+          required: false
+          schema:
+            default: false
+            type: boolean
       responses:
         '200':
           content:
@@ -41432,7 +41575,7 @@ paths:
                     message: EnrollmentAPIKey key-id-1 not found
                     statusCode: 404
           description: Not Found
-      summary: Revoke an enrollment API key
+      summary: Revoke or delete an enrollment API key
       tags:
         - Fleet enrollment API keys
       x-metaTags:
@@ -75749,7 +75892,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -75764,7 +75908,9 @@ paths:
                   properties: {}
                 - nullable: true
                 - {}
-      responses: {}
+      responses:
+        '200':
+          description: The stream was deleted successfully.
       summary: Delete a stream
       tags:
         - streams
@@ -75783,7 +75929,8 @@ paths:
         Fetches a stream definition and associated dashboards<br/><br/>[Required authorization] Route required privileges: read_stream.
       operationId: get-streams-name
       parameters:
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -75862,6 +76009,7 @@ paths:
                       name: logs.nginx
                       type: wired
                       updated_at: '2025-01-15T10:30:00.000Z'
+          description: Stream definition and associated metadata.
       summary: Get a stream
       tags:
         - streams
@@ -75887,7 +76035,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -75962,7 +76111,9 @@ paths:
                     type: classic
             schema:
               $ref: '#/components/schemas/Kibana_HTTP_APIs_StreamUpsertRequest'
-      responses: {}
+      responses:
+        '200':
+          description: The stream was created or updated successfully.
       summary: Create or update a stream
       tags:
         - streams
@@ -75989,7 +76140,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the parent stream to fork from.
+          in: path
           name: name
           required: true
           schema:
@@ -76030,7 +76182,9 @@ paths:
               required:
                 - stream
                 - where
-      responses: {}
+      responses:
+        '200':
+          description: The stream was forked successfully.
       summary: Fork a stream
       tags:
         - streams
@@ -76050,7 +76204,8 @@ paths:
         Fetches the ingest settings of an ingest stream definition<br/><br/>[Required authorization] Route required privileges: read_stream.
       operationId: get-streams-name-ingest
       parameters:
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -76104,6 +76259,7 @@ paths:
                             where:
                               field: http.response.status_code
                               gte: 500
+          description: Ingest settings for the stream.
       summary: Get ingest stream settings
       tags:
         - streams
@@ -76129,7 +76285,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -76329,7 +76486,9 @@ paths:
                         - classic
               required:
                 - ingest
-      responses: {}
+      responses:
+        '200':
+          description: The ingest settings were updated successfully.
       summary: Update ingest stream settings
       tags:
         - streams
@@ -76349,7 +76508,8 @@ paths:
         Fetches the query settings of a query stream definition<br/><br/>[Required authorization] Route required privileges: read_stream.
       operationId: get-streams-name-query
       parameters:
-        - in: path
+        - description: The name of the query stream.
+          in: path
           name: name
           required: true
           schema:
@@ -76364,7 +76524,9 @@ paths:
                   properties: {}
                 - nullable: true
                 - {}
-      responses: {}
+      responses:
+        '200':
+          description: Query settings for the stream.
       summary: Get query stream settings
       tags:
         - streams
@@ -76390,7 +76552,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the query stream.
+          in: path
           name: name
           required: true
           schema:
@@ -76421,7 +76584,9 @@ paths:
                     - esql
               required:
                 - query
-      responses: {}
+      responses:
+        '200':
+          description: The query stream settings were updated successfully.
       summary: Upsert query stream settings
       tags:
         - streams
@@ -76448,7 +76613,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream to export content from.
+          in: path
           name: name
           required: true
           schema:
@@ -76456,6 +76622,15 @@ paths:
       requestBody:
         content:
           application/json:
+            examples:
+              exportContent:
+                value:
+                  description: Nginx stream content pack
+                  include:
+                    objects:
+                      all: {}
+                  name: nginx-pack
+                  version: 1.0.0
             schema:
               additionalProperties: false
               type: object
@@ -76473,7 +76648,9 @@ paths:
                 - description
                 - version
                 - include
-      responses: {}
+      responses:
+        '200':
+          description: Content pack archive for the stream.
       summary: Export stream content
       tags:
         - streams
@@ -76500,7 +76677,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream to import content into.
+          in: path
           name: name
           required: true
           schema:
@@ -76508,6 +76686,11 @@ paths:
       requestBody:
         content:
           multipart/form-data:
+            examples:
+              importContent:
+                value:
+                  content: <binary zip archive>
+                  include: '{"objects":{"all":{}}}'
             schema:
               additionalProperties: false
               type: object
@@ -76518,7 +76701,9 @@ paths:
               required:
                 - include
                 - content
-      responses: {}
+      responses:
+        '200':
+          description: Content was imported into the stream successfully.
       summary: Import content into a stream
       tags:
         - streams
@@ -76538,7 +76723,8 @@ paths:
         Fetches all queries linked to a stream that are visible to the current user in the current space.<br/><br/>[Required authorization] Route required privileges: read_stream.
       operationId: get-streams-name-queries
       parameters:
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -76553,7 +76739,29 @@ paths:
                   properties: {}
                 - nullable: true
                 - {}
-      responses: {}
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                listQueries:
+                  value:
+                    queries:
+                      - description: Count error-level log events grouped by host name
+                        esql:
+                          query: FROM logs.nginx | WHERE log.level == "error" | STATS count = COUNT(*) BY host.name
+                        id: error-count-by-host
+                        severity_score: 75
+                        title: Error count by host
+                        type: match
+                      - description: Requests with response time above 2 seconds
+                        esql:
+                          query: FROM logs.nginx | WHERE http.response_time > 2000
+                        id: high-latency-requests
+                        severity_score: 50
+                        title: High latency requests
+                        type: match
+          description: List of queries linked to the stream.
       summary: Get stream queries
       tags:
         - streams
@@ -76580,7 +76788,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -76588,6 +76797,18 @@ paths:
       requestBody:
         content:
           application/json:
+            examples:
+              bulkQueries:
+                value:
+                  operations:
+                    - index:
+                        description: Count error-level log events grouped by host name
+                        esql:
+                          query: FROM logs* | WHERE log.level == "error" | STATS count = COUNT(*) BY host.name
+                        id: error-count-by-host
+                        title: Error count by host
+                    - delete:
+                        id: old-query-id
             schema:
               additionalProperties: false
               type: object
@@ -76644,7 +76865,9 @@ paths:
                   type: array
               required:
                 - operations
-      responses: {}
+      responses:
+        '200':
+          description: Bulk operation completed successfully.
       summary: Bulk update queries
       tags:
         - streams
@@ -76671,12 +76894,14 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
             type: string
-        - in: path
+        - description: The identifier of the query to remove.
+          in: path
           name: queryId
           required: true
           schema:
@@ -76691,7 +76916,9 @@ paths:
                   properties: {}
                 - nullable: true
                 - {}
-      responses: {}
+      responses:
+        '200':
+          description: The query was removed successfully.
       summary: Remove a query from a stream
       tags:
         - streams
@@ -76717,12 +76944,14 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
             type: string
-        - in: path
+        - description: The identifier of the query.
+          in: path
           name: queryId
           required: true
           schema:
@@ -76730,6 +76959,13 @@ paths:
       requestBody:
         content:
           application/json:
+            examples:
+              upsertQuery:
+                value:
+                  description: Count error-level log events grouped by host name
+                  esql:
+                    query: FROM logs* | WHERE log.level == "error" | STATS count = COUNT(*) BY host.name
+                  title: Error count by host
             schema:
               additionalProperties: false
               type: object
@@ -76758,7 +76994,9 @@ paths:
               required:
                 - title
                 - esql
-      responses: {}
+      responses:
+        '200':
+          description: The query was added or updated successfully.
       summary: Upsert a query to a stream
       tags:
         - streams
@@ -76778,7 +77016,8 @@ paths:
         Read the significant events<br/><br/>[Required authorization] Route required privileges: read_stream.
       operationId: get-streams-name-significant-events
       parameters:
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -76793,7 +77032,8 @@ paths:
           required: true
           schema:
             type: string
-        - in: query
+        - description: The bucket size for aggregating events (e.g. "1m", "1h").
+          in: query
           name: bucketSize
           required: true
           schema:
@@ -76824,7 +77064,43 @@ paths:
                   properties: {}
                 - nullable: true
                 - {}
-      responses: {}
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                significantEvents:
+                  value:
+                    aggregated_occurrences:
+                      - count: 42
+                        date: '2025-01-15T10:00:00.000Z'
+                      - count: 18
+                        date: '2025-01-15T11:00:00.000Z'
+                      - count: 7
+                        date: '2025-01-15T12:00:00.000Z'
+                    significant_events:
+                      - change_points:
+                          type:
+                            spike:
+                              change_point: 1
+                              p_value: 0.002
+                        description: Count error-level log events grouped by host name
+                        esql:
+                          query: FROM logs.nginx | WHERE log.level == "error" | STATS count = COUNT(*) BY host.name
+                        id: error-count-by-host
+                        occurrences:
+                          - count: 42
+                            date: '2025-01-15T10:00:00.000Z'
+                          - count: 18
+                            date: '2025-01-15T11:00:00.000Z'
+                          - count: 7
+                            date: '2025-01-15T12:00:00.000Z'
+                        rule_backed: false
+                        severity_score: 75
+                        stream_name: logs.nginx
+                        title: Error count by host
+                        type: match
+          description: Significant events for the stream.
       summary: Read the significant events
       tags:
         - streams
@@ -76851,7 +77127,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -76862,6 +77139,22 @@ paths:
           required: false
           schema:
             type: string
+        - in: query
+          name: from
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: to
+          required: true
+          schema:
+            type: string
+        - description: Number of sample documents to use for generation from the current data of stream
+          in: query
+          name: sampleDocsSize
+          required: false
+          schema:
+            type: number
       requestBody:
         content:
           application/json:
@@ -76872,7 +77165,9 @@ paths:
                   properties: {}
                 - nullable: true
                 - {}
-      responses: {}
+      responses:
+        '200':
+          description: Generated significant event query definitions.
       summary: Generate significant events
       tags:
         - streams
@@ -76899,7 +77194,8 @@ paths:
           schema:
             example: 'true'
             type: string
-        - in: path
+        - description: The name of the stream.
+          in: path
           name: name
           required: true
           schema:
@@ -76914,7 +77210,8 @@ paths:
           required: true
           schema:
             type: string
-        - in: query
+        - description: The bucket size for aggregating events (e.g. "1m", "1h").
+          in: query
           name: bucketSize
           required: true
           schema:
@@ -76942,7 +77239,9 @@ paths:
                     - esql
               required:
                 - query
-      responses: {}
+      responses:
+        '200':
+          description: Significant event preview results.
       summary: Preview significant events
       tags:
         - streams
@@ -93848,6 +94147,7 @@ components:
             - none
           type: string
         compression_level:
+          nullable: true
           type: number
         config_yaml:
           nullable: true
@@ -95050,6 +95350,7 @@ components:
             - none
           type: string
         compression_level:
+          nullable: true
           type: number
         config_yaml:
           nullable: true
@@ -97578,6 +97879,7 @@ components:
             - none
           type: string
         compression_level:
+          nullable: true
           type: number
         config_yaml:
           nullable: true
