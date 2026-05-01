@@ -32,9 +32,11 @@ import { LateBindingSpanProcessor } from '..';
 export function initTracing({
   resource,
   tracingConfig,
+  registerExporters = true,
 }: {
   resource: resources.Resource;
   tracingConfig: TracingConfig;
+  registerExporters?: boolean;
 }) {
   const contextManager = new AsyncLocalStorageContextManager();
   context.setGlobalContextManager(contextManager);
@@ -53,7 +55,8 @@ export function initTracing({
     })
   );
 
-  const traceIdSampler = new tracing.TraceIdRatioBasedSampler(tracingConfig.sample_rate);
+  const sampleRate = registerExporters ? tracingConfig.sample_rate : 0;
+  const traceIdSampler = new tracing.TraceIdRatioBasedSampler(sampleRate);
 
   const baseSampler = new tracing.ParentBasedSampler({
     root: traceIdSampler,
@@ -65,30 +68,32 @@ export function initTracing({
     resource,
   });
 
-  castArray(tracingConfig.exporters).forEach((exporter) => {
-    const variant = fromExternalVariant(exporter);
-    switch (variant.type) {
-      case 'langfuse':
-        LateBindingSpanProcessor.get().register(new LangfuseSpanProcessor(variant.value));
-        break;
+  if (registerExporters) {
+    castArray(tracingConfig.exporters).forEach((exporter) => {
+      const variant = fromExternalVariant(exporter);
+      switch (variant.type) {
+        case 'langfuse':
+          LateBindingSpanProcessor.get().register(new LangfuseSpanProcessor(variant.value));
+          break;
 
-      case 'phoenix':
-        LateBindingSpanProcessor.get().register(new PhoenixSpanProcessor(variant.value));
-        break;
+        case 'phoenix':
+          LateBindingSpanProcessor.get().register(new PhoenixSpanProcessor(variant.value));
+          break;
 
-      case 'grpc':
-        LateBindingSpanProcessor.get().register(new OTLPSpanProcessor(variant.value, 'grpc'));
-        break;
+        case 'grpc':
+          LateBindingSpanProcessor.get().register(new OTLPSpanProcessor(variant.value, 'grpc'));
+          break;
 
-      case 'proto':
-        LateBindingSpanProcessor.get().register(new OTLPSpanProcessor(variant.value, 'proto'));
-        break;
+        case 'proto':
+          LateBindingSpanProcessor.get().register(new OTLPSpanProcessor(variant.value, 'proto'));
+          break;
 
-      case 'http':
-        LateBindingSpanProcessor.get().register(new OTLPSpanProcessor(variant.value, 'http'));
-        break;
-    }
-  });
+        case 'http':
+          LateBindingSpanProcessor.get().register(new OTLPSpanProcessor(variant.value, 'http'));
+          break;
+      }
+    });
+  }
 
   trace.setGlobalTracerProvider(nodeTracerProvider);
 

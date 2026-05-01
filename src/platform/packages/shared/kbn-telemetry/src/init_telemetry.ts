@@ -47,15 +47,19 @@ export const initTelemetry = (
   const resource = buildOtelResources(serviceName);
 
   if (telemetryConfig.enabled) {
-    if (telemetryConfig.tracing.enabled) {
+    const tracingFullyEnabled = telemetryConfig.tracing.enabled;
+
+    if (tracingFullyEnabled) {
       maybeInitAutoInstrumentations();
     }
 
     const asyncSettled = resource.waitForAsyncAttributes?.() ?? Promise.resolve();
     asyncSettled.then(() => {
-      if (telemetryConfig.tracing.enabled) {
-        initTracing({ resource, tracingConfig: telemetryConfig.tracing });
-      }
+      initTracing({
+        resource,
+        tracingConfig: telemetryConfig.tracing,
+        registerExporters: tracingFullyEnabled,
+      });
 
       if (telemetryConfig.metrics.enabled || monitoringCollectionConfig.enabled) {
         initMetrics({
