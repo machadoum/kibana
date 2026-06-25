@@ -6,6 +6,7 @@
  */
 
 import type { ElasticsearchClient } from '@kbn/core/server';
+import { excludeAgentBuilderOtelIndices } from '@kbn/agent-builder-common';
 import {
   FAILURE_STORE_PRIVILEGE,
   MANAGE_FAILURE_STORE_PRIVILEGE,
@@ -25,12 +26,14 @@ export async function getDataStreams(options: {
 
   const datasetNames = datasetQuery
     ? [datasetQuery]
-    : types.map((type) =>
-        streamPartsToIndexPattern({
-          typePattern: type,
-          datasetPattern: '*-*',
-        })
-      );
+    : types
+        .map((type) =>
+          streamPartsToIndexPattern({
+            typePattern: type,
+            datasetPattern: '*-*',
+          })
+        )
+        .map(excludeAgentBuilderOtelIndices);
 
   const datasetUserPrivileges = await datasetQualityPrivileges.getDatasetPrivileges(
     esClient,
@@ -105,12 +108,14 @@ export async function getDatasetTypesPrivileges(options: {
 }) {
   const { esClient, types, isSecurityEnabled } = options;
 
-  const datasetNames = types.map((type) =>
-    streamPartsToIndexPattern({
-      typePattern: type,
-      datasetPattern: '*-*',
-    })
-  );
+  const datasetNames = types
+    .map((type) =>
+      streamPartsToIndexPattern({
+        typePattern: type,
+        datasetPattern: '*-*',
+      })
+    )
+    .map(excludeAgentBuilderOtelIndices);
 
   const { datasetsPrivilages } = await datasetQualityPrivileges.getDatasetPrivileges(
     esClient,

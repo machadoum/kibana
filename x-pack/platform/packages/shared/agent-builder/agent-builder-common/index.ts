@@ -286,3 +286,4 @@ export {
   OAuthClientType,
 } from './oauth_clients';
 export { MCP_SERVER_PATH } from './mcp';
+export { AGENT_BUILDER_OTEL_INDEX_EXCLUSIONS, excludeAgentBuilderOtelIndices } from './traces';

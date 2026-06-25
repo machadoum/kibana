@@ -700,7 +700,9 @@ export type DatasetQualityControllerStateService = ActorRefFrom<
 const extractAuthorizedDatasetTypes = (datasetTypesPrivileges: DatasetTypesPrivileges) =>
   Object.entries(datasetTypesPrivileges)
     .filter(([_type, priv]) => priv.canMonitor || priv.canRead)
-    .map(([type, _priv]) => type.replace(/-\*-\*$/, '')) as DataStreamType[];
+    .map(([type, _priv]) =>
+      type.replace(/,-[^,]+/g, '').replace(/-\*-\*$/, '')
+    ) as DataStreamType[];
 
 const getValidDatasetTypes = (
   context: DatasetQualityControllerContext,

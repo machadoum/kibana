@@ -10,6 +10,7 @@
     "../../../../../typings/**/*"
   ],
   "kbn_references": [
+    "@kbn/agent-builder-common",
     "@kbn/alerting-comparators",
     "@kbn/alerting-plugin",
     "@kbn/alerts-as-data-utils",
