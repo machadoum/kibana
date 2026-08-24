@@ -16,7 +16,7 @@ import { useToasts } from '../use_toasts';
 
 interface UseAgentAiIndicesResult {
   /** Effective AI indices per agent, with type-contributed ones flagged as defaults. */
-  aiIndicesByAgentId: Record<string, AgentAiIndexEntry>;
+  aiIndicesByAgentId: Record<string, AgentAiIndexEntry[]>;
   isLoading: boolean;
   error: Error | undefined;
 }
