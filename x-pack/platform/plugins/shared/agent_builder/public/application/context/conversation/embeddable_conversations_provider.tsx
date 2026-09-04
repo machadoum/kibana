@@ -28,9 +28,11 @@ import {
 } from '../../../sidebar/sidebar_streaming_singleton';
 import { useConversationActions } from './use_conversation_actions';
 import { ConversationChangeNotifier } from './conversation_change_notifier';
+import { InProgressExecutionReconnect } from './in_progress_execution_reconnect';
 import { usePersistedConversationId } from '../../hooks/use_persisted_conversation_id';
 import { AppLeaveContext } from '../app_leave_context';
 import { useEffectiveSpaceDefaultAgent } from '../../hooks/use_space_default_agent';
+import { queryKeys } from '../../query_keys';
 import { RedirectLoading } from '../../components/redirects/redirect_loading';
 
 const noopOnAppLeave = () => {};
@@ -52,10 +54,16 @@ export const PinnedConversationProvider: React.FC<
   return (
     <ConversationContext.Provider value={value}>
       <ConversationChangeNotifier />
+      <InProgressExecutionReconnect />
       {isReady ? children : <RedirectLoading />}
     </ConversationContext.Provider>
   );
 };
+interface EmbeddableTrackedProps extends EmbeddableConversationProps {
+  conversationId?: string;
+  conversationReopenNonce?: number;
+}
+
 interface EmbeddableConversationsProviderProps extends EmbeddableConversationInternalProps {
   children: React.ReactNode;
 }
@@ -67,7 +75,7 @@ export const EmbeddableConversationsProvider: React.FC<EmbeddableConversationsPr
   ...contextProps
 }) => {
   // Track current props, starting with initial props
-  const [currentProps, setCurrentProps] = useState<EmbeddableConversationProps>(contextProps);
+  const [currentProps, setCurrentProps] = useState<EmbeddableTrackedProps>(contextProps);
 
   // Register callbacks to allow parent to update props and clear browserApiTools
   const onRegisterCallbacks = contextProps.onRegisterCallbacks;
@@ -101,6 +109,8 @@ export const EmbeddableConversationsProvider: React.FC<EmbeddableConversationsPr
   const localQueryClient = useMemo(() => new QueryClient(), []);
   const queryClient = persistAcrossReopen ? sidebarQueryClient : localQueryClient;
 
+  // Bridged value from the singleton `StreamingProvider` (see `sidebar_streaming_singleton.tsx`).
+  // Only read when `persistAcrossReopen` is set.
   const bridgedStreamingValue = useObservable(
     sidebarStreamingValue$,
     sidebarStreamingValue$.getValue()
@@ -175,33 +185,58 @@ export const EmbeddableConversationsProvider: React.FC<EmbeddableConversationsPr
   const validateAndSetConversationId = useCallback(
     async (id: string) => {
       try {
+        queryClient.removeQueries({ queryKey: queryKeys.conversations.byId(id) });
         const conversation = await services.conversationsService.get({ conversationId: id });
+        queryClient.setQueryData(queryKeys.conversations.byId(id), conversation);
         setConversationId(conversation.id ?? undefined);
       } catch {
         setConversationId(undefined);
       }
     },
-    [services.conversationsService, setConversationId]
+    [queryClient, services.conversationsService, setConversationId]
   );
 
-  // One-time initialization per provider instance:
-  // - If newConversation flag is set, clears the conversation ID to start fresh.
-  // - Otherwise, if there's a persisted conversation ID, validates and restores it.
-  // - Otherwise, clears the conversation ID.
-  // Guarded by hasInitializedConversationIdRef to prevent re-running on subsequent renders.
-  useEffect(() => {
-    if (hasInitializedConversationIdRef.current) return;
+  const lastConversationReopenNonceRef = useRef<number | undefined>(undefined);
 
-    if (contextProps.newConversation) {
-      setConversationId(undefined);
-    } else if (persistedConversationId) {
-      validateAndSetConversationId(persistedConversationId);
-    } else {
-      setConversationId(undefined);
+  // Initialize or re-open a conversation. When `openChat({ conversationId })` is called,
+  // `conversationReopenNonce` bumps so we bust stale React Query cache even for the same id.
+  useEffect(() => {
+    if (currentProps.newConversation) {
+      if (!hasInitializedConversationIdRef.current) {
+        setConversationId(undefined);
+        hasInitializedConversationIdRef.current = true;
+      }
+      return;
     }
-    hasInitializedConversationIdRef.current = true;
+
+    const explicitConversationId = currentProps.conversationId;
+    const reopenNonce = currentProps.conversationReopenNonce;
+    const targetConversationId = explicitConversationId ?? persistedConversationId;
+
+    if (!targetConversationId) {
+      if (!hasInitializedConversationIdRef.current) {
+        setConversationId(undefined);
+        hasInitializedConversationIdRef.current = true;
+      }
+      return;
+    }
+
+    const isExplicitReopen =
+      explicitConversationId !== undefined &&
+      reopenNonce !== undefined &&
+      reopenNonce !== lastConversationReopenNonceRef.current;
+
+    if (!hasInitializedConversationIdRef.current || isExplicitReopen) {
+      void validateAndSetConversationId(targetConversationId);
+      if (reopenNonce !== undefined) {
+        lastConversationReopenNonceRef.current = reopenNonce;
+      }
+      hasInitializedConversationIdRef.current = true;
+    }
   }, [
-    contextProps.newConversation,
+    currentProps.conversationId,
+    currentProps.conversationReopenNonce,
+    currentProps.newConversation,
     persistedConversationId,
     setConversationId,
     validateAndSetConversationId,
@@ -269,6 +304,7 @@ export const EmbeddableConversationsProvider: React.FC<EmbeddableConversationsPr
     () => ({
       conversationId,
       isEmbeddedContext: true,
+      conversationReopenNonce: currentProps.conversationReopenNonce,
       sessionTag: currentProps.sessionTag,
       agentId: currentProps.agentId ?? agentBuilderDefaultAgentId,
       initialMessage: currentProps.initialMessage,
@@ -286,6 +322,7 @@ export const EmbeddableConversationsProvider: React.FC<EmbeddableConversationsPr
     }),
     [
       conversationId,
+      currentProps.conversationReopenNonce,
       currentProps.sessionTag,
       currentProps.agentId,
       currentProps.initialMessage,

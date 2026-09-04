@@ -49,6 +49,10 @@ jest.mock('./conversation_change_notifier', () => ({
   ConversationChangeNotifier: () => null,
 }));
 
+jest.mock('./in_progress_execution_reconnect', () => ({
+  InProgressExecutionReconnect: () => null,
+}));
+
 const createMockAttachment = (): ConversationAttachment => ({
   type: 'test.attachment',
   data: { content: 'test' },

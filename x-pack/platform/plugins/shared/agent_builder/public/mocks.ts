@@ -10,6 +10,7 @@ import type {
   AgentsServiceStartContract,
   AttachmentServiceStartContract,
   ConversationTemplateServiceStartContract,
+  ConversationsServiceStartContract,
   RendererServiceStartContract,
   ToolServiceStartContract,
 } from '@kbn/agent-builder-browser';
@@ -30,11 +31,13 @@ export type ConversationTemplateServiceStartContractMock =
   jest.Mocked<ConversationTemplateServiceStartContract>;
 export type RendererServiceStartContractMock = jest.Mocked<RendererServiceStartContract>;
 export type ToolServiceStartContractMock = jest.Mocked<ToolServiceStartContract>;
+export type ConversationsServiceStartContractMock = jest.Mocked<ConversationsServiceStartContract>;
 
 export type AgentBuilderPluginStartMock = jest.Mocked<AgentBuilderPluginStart> & {
   agents: AgentsServiceStartContractMock;
   attachments: AttachmentServiceStartContractMock;
   conversationTemplates: ConversationTemplateServiceStartContractMock;
+  conversations: ConversationsServiceStartContractMock;
   renderers: RendererServiceStartContractMock;
   tools: ToolServiceStartContractMock;
 };
@@ -79,11 +82,19 @@ const createToolStartMock = (): ToolServiceStartContractMock => {
   };
 };
 
+const createConversationsStartMock = (): ConversationsServiceStartContractMock => {
+  return {
+    get: jest.fn(),
+    setAccessControl: jest.fn(),
+  };
+};
+
 const createStartContractMock = (): AgentBuilderPluginStartMock => {
   return {
     agents: createAgentStartMock(),
     attachments: createAttachmentStartMock(),
     conversationTemplates: createConversationTemplatesStartMock(),
+    conversations: createConversationsStartMock(),
     renderers: createRendererStartMock(),
     tools: createToolStartMock(),
     events: {

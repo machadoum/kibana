@@ -17,6 +17,9 @@ jest.mock('../../hooks/use_space_default_agent', () => ({
 }));
 // Rendered by the component but irrelevant here (it has its own dependencies).
 jest.mock('./conversation_change_notifier', () => ({ ConversationChangeNotifier: () => null }));
+jest.mock('./in_progress_execution_reconnect', () => ({
+  InProgressExecutionReconnect: () => null,
+}));
 // Render the spinner as a marker so we can assert the isReady gate.
 jest.mock('../../components/redirects/redirect_loading', () => ({
   RedirectLoading: () => <div>loading-spinner</div>,

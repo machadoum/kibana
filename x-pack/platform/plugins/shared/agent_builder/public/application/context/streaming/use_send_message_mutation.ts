@@ -39,6 +39,10 @@ import {
   insertSidebarConversationListRow,
   removeSidebarConversationListRow,
 } from '../../utils/conversation_sidebar_list_cache';
+import {
+  clearActiveExecutionId,
+  persistActiveExecutionId,
+} from '../../utils/active_execution_storage';
 
 const SCREEN_CONTEXT_ATTACHMENT_ID = 'screen-context';
 
@@ -188,6 +192,7 @@ export const useSendMessageMutation = ({
       const controller = new AbortController();
       const executionId = uuidv4();
       controllersRef.current.set(vars.conversationId, { controller, executionId });
+      persistActiveExecutionId(vars.conversationId, executionId);
 
       let hasInsertedOptimisticListRow = false;
       if (isRegenerate) {
@@ -326,6 +331,7 @@ export const useSendMessageMutation = ({
             });
           }
         }
+        clearActiveExecutionId(vars.conversationId);
         clearActiveStream(vars.conversationId);
         if (controllersRef.current.get(vars.conversationId)?.controller === controller) {
           controllersRef.current.delete(vars.conversationId);

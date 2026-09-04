@@ -50,6 +50,7 @@ import { createPublicRenderersContract } from './services/renderers';
 import { createPublicToolContract } from './services/tools';
 import { createPublicAgentsContract } from './services/agents';
 import { createPublicEventsContract } from './services/events';
+import { createPublicConversationsContract } from './services/conversations/create_public_conversations_contract';
 import { registerWorkflowSteps } from './step_types';
 import type {
   ConfigSchema,
@@ -87,6 +88,7 @@ export class AgentBuilderPlugin
 {
   logger: Logger;
   private conversationActiveConfig: EmbeddableConversationProps = {};
+  private conversationReopenNonce = 0;
   private internalServices?: AgentBuilderInternalService;
   private setupServices?: {
     navigationService: NavigationService;
@@ -188,8 +190,15 @@ export class AgentBuilderPlugin
 
     const openSidebarInternal = (options?: OpenSidebarInternalOptions) => {
       const { conversationId, ...openOptions } = options ?? {};
-      const config =
+      const baseConfig =
         Object.keys(openOptions).length > 0 ? openOptions : this.conversationActiveConfig;
+      const config = conversationId
+        ? {
+            ...baseConfig,
+            conversationId,
+            conversationReopenNonce: ++this.conversationReopenNonce,
+          }
+        : baseConfig;
 
       if (conversationId) {
         const storageKey = storageKeys.getLastConversationKey(config.sessionTag, config.agentId);
@@ -276,6 +285,9 @@ export class AgentBuilderPlugin
 
     setSidebarServices(core, internalServices);
 
+    // Mounted once, outside the sidebar's own React tree, so in-flight stream state and
+    // conversation cache survive the sidebar's close/reopen cycle. See
+    // `sidebar/sidebar_streaming_singleton.tsx`.
     const sidebarStreamingHost = document.createElement('div');
     sidebarStreamingHost.style.display = 'none';
     document.body.appendChild(sidebarStreamingHost);
@@ -350,6 +362,7 @@ export class AgentBuilderPlugin
       renderers: createPublicRenderersContract({ renderersService }),
       tools: createPublicToolContract({ toolsService }),
       events: createPublicEventsContract({ eventsService }),
+      conversations: createPublicConversationsContract({ conversationsService }),
       getAgentBuilderAccess: createPublicEmbeddableChatAccess({
         accessChecker,
         application: core.application,

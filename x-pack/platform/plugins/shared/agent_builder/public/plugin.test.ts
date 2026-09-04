@@ -296,5 +296,27 @@ describe('AgentBuilderPlugin', () => {
         attachments: [mockGroup],
       });
     });
+
+    it('should pass conversationId and reopen nonce when resuming a conversation', () => {
+      const sidebarApp = createMockSidebarApp();
+      const plugin = new AgentBuilderPlugin(createMockInitializerContext());
+      plugin.setup(createMockCoreSetup(), createMockSetupDeps());
+      const start = plugin.start(createMockCoreStart(sidebarApp), createMockStartDeps());
+
+      const { mockUpdateProps } = openSidebarAndRegisterCallbacks(start);
+
+      start.openChat({
+        conversationId: 'conversation-resume',
+        sessionTag: 'context-engine-ai-index-test',
+      });
+
+      expect(mockUpdateProps).toHaveBeenCalledWith(
+        expect.objectContaining({
+          conversationId: 'conversation-resume',
+          conversationReopenNonce: 1,
+          sessionTag: 'context-engine-ai-index-test',
+        })
+      );
+    });
   });
 });

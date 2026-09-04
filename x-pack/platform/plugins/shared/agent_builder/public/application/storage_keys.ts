@@ -18,4 +18,7 @@ export const storageKeys = {
     const agent = agentId || 'default';
     return `agentBuilder.lastConversation.${tag}.${agent}`;
   },
+
+  getActiveExecutionKey: (conversationId: string): string =>
+    `agentBuilder.activeExecution.${conversationId}`,
 };

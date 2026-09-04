@@ -19,6 +19,10 @@ import { queryKeys } from '../../query_keys';
 import { subscribeToChatEvents } from './use_subscribe_to_chat_events';
 import { BrowserToolExecutor } from '../../services/browser_tool_executor';
 import { createConversationActions } from '../conversation/use_conversation_actions';
+import {
+  clearActiveExecutionId,
+  persistActiveExecutionId,
+} from '../../utils/active_execution_storage';
 
 export interface ResumeRoundVars {
   prompts: Record<string, PromptResponse>;
@@ -74,6 +78,7 @@ export const useResumeRoundMutation = ({
       const controller = new AbortController();
       const executionId = uuidv4();
       controllersRef.current.set(vars.conversationId, { controller, executionId });
+      persistActiveExecutionId(vars.conversationId, executionId);
 
       // Optimistically populate ask_user_question step answers before clearing the prompt —
       // pending_prompts is needed to reconstruct the step, so this must come first.
@@ -118,6 +123,7 @@ export const useResumeRoundMutation = ({
         if (succeeded) {
           streamActions.invalidateConversation();
         }
+        clearActiveExecutionId(vars.conversationId);
         clearActiveStream(vars.conversationId);
         if (controllersRef.current.get(vars.conversationId)?.controller === controller) {
           controllersRef.current.delete(vars.conversationId);

@@ -14,6 +14,8 @@ interface ConversationContextValue {
   conversationId?: string;
   isEmbeddedContext: boolean;
   sessionTag?: string;
+  /** Bumps when `openChat({ conversationId })` reopens the same conversation in embeddable mode. */
+  conversationReopenNonce?: number;
   agentId?: string;
   initialMessage?: string;
   autoSendInitialMessage?: boolean;

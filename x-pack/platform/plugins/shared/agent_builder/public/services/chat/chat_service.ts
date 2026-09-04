@@ -98,8 +98,20 @@ export class ChatService {
     });
   }
 
-  followExecution(executionId: string, signal?: AbortSignal): Observable<ChatEvent> {
-    return defer(() => {
+  async findRunningExecutionForConversation(conversationId: string): Promise<string | null> {
+    const { executionId } = await this.http.get<{ executionId: string | null }>(
+      `${internalApiPath}/executions/_find`,
+      { query: { conversationId } }
+    );
+    return executionId;
+  }
+
+  followExecution(
+    executionId: string,
+    signal?: AbortSignal,
+    conversationId?: string
+  ): Observable<ChatEvent> {
+    const stream$ = defer(() => {
       return this.http.get(`${internalApiPath}/executions/${executionId}/follow`, {
         signal,
         asResponse: true,
@@ -110,6 +122,17 @@ export class ChatService {
       httpResponseIntoObservable<ChatEvent>(),
       unwrapAgentBuilderErrors()
     );
+
+    if (conversationId) {
+      return stream$.pipe(
+        propagateEvents({
+          eventsService: this.events,
+          conversationId,
+        })
+      );
+    }
+
+    return stream$;
   }
 
   async abort(executionId: string): Promise<void> {

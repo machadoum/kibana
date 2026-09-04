@@ -20,6 +20,7 @@ import { useConversationActions } from './use_conversation_actions';
 import { upsertAttachmentsIntoList } from './upsert_attachments_into_list';
 import { removeAttachmentFromList } from './remove_attachment_from_list';
 import { ConversationChangeNotifier } from './conversation_change_notifier';
+import { InProgressExecutionReconnect } from './in_progress_execution_reconnect';
 
 interface RoutedConversationsProviderProps {
   children: React.ReactNode;
@@ -145,6 +146,7 @@ export const RoutedConversationsProvider: React.FC<RoutedConversationsProviderPr
   return (
     <ConversationContext.Provider value={contextValue}>
       <ConversationChangeNotifier />
+      <InProgressExecutionReconnect />
       {children}
     </ConversationContext.Provider>
   );

@@ -30,6 +30,7 @@ import { useSendMessageMutation } from './use_send_message_mutation';
 import type { SendMessageVars } from './use_send_message_mutation';
 import { useResumeRoundMutation } from './use_resume_round_mutation';
 import type { ResumeRoundVars } from './use_resume_round_mutation';
+import { useFollowInProgressExecutionMutation } from './use_follow_in_progress_execution_mutation';
 import type { ActiveStream, StreamRecord } from './types';
 
 export interface StreamingContextValue {
@@ -37,6 +38,7 @@ export interface StreamingContextValue {
   byConversationId: Record<string, StreamRecord>;
   mutateSendMessage: (vars: SendMessageVars) => void;
   mutateResumeRound: (vars: ResumeRoundVars) => void;
+  reconnectInProgressExecution: (conversationId: string) => Promise<void>;
   cancelStream: (conversationId: string) => void;
   cancelAllStreams: () => void;
   removeError: (conversationId: string) => void;
@@ -137,6 +139,12 @@ export const StreamingProvider = ({ children }: { children: React.ReactNode }) =
     clearActiveStream,
   });
 
+  const followMutation = useFollowInProgressExecutionMutation({
+    setActiveStream,
+    clearActiveStream,
+    setError,
+  });
+
   // Pull stable references out of the mutation result objects. The result object itself is
   // a NEW reference each render (React Query rebuilds it), so anything that depends on the
   // whole object would re-evaluate every render. The individual fields below are stable.
@@ -146,13 +154,17 @@ export const StreamingProvider = ({ children }: { children: React.ReactNode }) =
   const resumeMutate = resumeMutation.mutate;
   const resumeCancel = resumeMutation.cancel;
   const resumeCancelAll = resumeMutation.cancelAll;
+  const followMutateAsync = followMutation.mutateAsync;
+  const followCancel = followMutation.cancel;
+  const followCancelAll = followMutation.cancelAll;
 
   const cancelStream = useCallback(
     (conversationId: string) => {
       sendCancel(conversationId);
       resumeCancel(conversationId);
+      followCancel(conversationId);
     },
-    [sendCancel, resumeCancel]
+    [sendCancel, resumeCancel, followCancel]
   );
 
   // Each mutation hook owns its own `Map<conversationId, AbortController>` ref; ask each
@@ -160,7 +172,8 @@ export const StreamingProvider = ({ children }: { children: React.ReactNode }) =
   const cancelAllStreams = useCallback(() => {
     sendCancelAll();
     resumeCancelAll();
-  }, [sendCancelAll, resumeCancelAll]);
+    followCancelAll();
+  }, [sendCancelAll, resumeCancelAll, followCancelAll]);
 
   // Wrappers around `mutate` that set the per-id `activeStreams` entry SYNCHRONOUSLY before
   // queueing the mutation. Without this, callers like `useSubmitMessage` (which call
@@ -187,12 +200,24 @@ export const StreamingProvider = ({ children }: { children: React.ReactNode }) =
     [setActiveStream, resumeMutate]
   );
 
+  const reconnectInProgressExecution = useCallback(
+    async (conversationId: string) => {
+      try {
+        await followMutateAsync({ conversationId });
+      } catch {
+        // Errors are surfaced via stream record; reconnect is best-effort.
+      }
+    },
+    [followMutateAsync]
+  );
+
   const value = useMemo<StreamingContextValue>(
     () => ({
       activeStreams,
       byConversationId,
       mutateSendMessage,
       mutateResumeRound,
+      reconnectInProgressExecution,
       cancelStream,
       cancelAllStreams,
       removeError,
@@ -203,6 +228,7 @@ export const StreamingProvider = ({ children }: { children: React.ReactNode }) =
       byConversationId,
       mutateSendMessage,
       mutateResumeRound,
+      reconnectInProgressExecution,
       cancelStream,
       cancelAllStreams,
       removeError,

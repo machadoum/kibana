@@ -9,9 +9,10 @@ import { schema } from '@kbn/config-schema';
 import type { Observable } from 'rxjs';
 import type { ServerSentEvent } from '@kbn/sse-utils';
 import { observableIntoEventSourceStream } from '@kbn/sse-utils-server';
+import { CONVERSATION_ID_MAX_LENGTH, ExecutionStatus } from '@kbn/agent-builder-common';
 import type { RouteDependencies } from '../types';
 import { getHandlerWrapper } from '../wrap_handler';
-import { internalApiPath } from '../../../common/constants';
+import { EXECUTION_CONVERSATION_ID_METADATA_KEY, internalApiPath } from '../../../common/constants';
 import { apiPrivileges } from '../../../common/features';
 import { getSSEResponseHeaders } from '../utils';
 
@@ -33,14 +34,38 @@ export function registerInternalExecutionRoutes({
       options: { access: 'internal' },
       validate: {
         query: schema.object({
-          metadataKey: schema.string({ minLength: 1, maxLength: 512 }),
-          metadataValue: schema.string({ minLength: 1, maxLength: 1024 }),
+          metadataKey: schema.maybe(schema.string({ minLength: 1, maxLength: 512 })),
+          metadataValue: schema.maybe(schema.string({ minLength: 1, maxLength: 1024 })),
+          conversationId: schema.maybe(
+            schema.string({ minLength: 1, maxLength: CONVERSATION_ID_MAX_LENGTH })
+          ),
         }),
       },
     },
     wrapHandler(async (context, request, response) => {
       const { execution: executionService } = getInternalServices();
-      const { metadataKey, metadataValue } = request.query;
+      const { metadataKey, metadataValue, conversationId } = request.query;
+
+      if (conversationId) {
+        const executions = await executionService.findExecutions(request, {
+          filter: {
+            metadata: { [EXECUTION_CONVERSATION_ID_METADATA_KEY]: conversationId },
+            status: [ExecutionStatus.running, ExecutionStatus.scheduled],
+          },
+          size: 1,
+        });
+
+        return response.ok({ body: { executionId: executions[0]?.executionId ?? null } });
+      }
+
+      if (!metadataKey || !metadataValue) {
+        return response.badRequest({
+          body: {
+            message:
+              'Either conversationId or both metadataKey and metadataValue query parameters are required',
+          },
+        });
+      }
 
       const executions = await executionService.findExecutions(request, {
         filter: { metadata: { [metadataKey]: metadataValue } },

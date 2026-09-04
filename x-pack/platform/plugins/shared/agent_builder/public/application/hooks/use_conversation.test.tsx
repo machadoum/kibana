@@ -48,6 +48,7 @@ const renderUseIsUnpersistedConversation = ({
     byConversationId: {},
     mutateSendMessage: jest.fn(),
     mutateResumeRound: jest.fn(),
+    reconnectInProgressExecution: jest.fn(),
     cancelStream: jest.fn(),
     cancelAllStreams: jest.fn(),
     removeError: jest.fn(),

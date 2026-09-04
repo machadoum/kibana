@@ -71,7 +71,8 @@ export const useConversationStream = () => {
   const isLastRoundInProgress = lastRound?.status === ConversationRoundStatus.inProgress;
 
   const isResponseLoading =
-    isMyStreamActive && (isLastRoundInProgress || myStream?.type === 'resume');
+    isMyStreamActive &&
+    (isLastRoundInProgress || myStream?.type === 'resume' || myStream?.type === 'follow');
   const isResuming = isMyStreamActive && myStream?.type === 'resume';
   const isRegenerating = isMyStreamActive && myStream?.type === 'regenerate';
 

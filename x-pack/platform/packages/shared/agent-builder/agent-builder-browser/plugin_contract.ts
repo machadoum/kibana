@@ -15,6 +15,7 @@ import type { BrowserApiToolDefinition } from './tools/browser_api_tool';
 import type {
   AgentsServiceStartContract,
   AttachmentServiceStartContract,
+  ConversationsServiceStartContract,
   RendererServiceStartContract,
   EventsServiceStartContract,
   ToolServiceStartContract,
@@ -143,6 +144,11 @@ export interface PublicEmbeddableConversationInputProps {
  */
 export interface OpenConversationSidebarOptions extends EmbeddableConversationProps {
   onClose?: () => void;
+  /**
+   * Conversation to restore on open. Ignored when `newConversation` is true.
+   * Seeds the session-scoped localStorage key before the sidebar mounts.
+   */
+  conversationId?: string;
 }
 
 /**
@@ -208,6 +214,10 @@ export interface AgentBuilderPluginStart {
    * Events service contract, can be used to listen to chat events.
    */
   events: EventsServiceStartContract;
+  /**
+   * Conversation service contract for reading conversations and updating access control.
+   */
+  conversations: ConversationsServiceStartContract;
   /**
    * Resolves Agent Builder access (enterprise license, LLM connector). Callers must
    * also require `application.capabilities.agentBuilder.show === true` before

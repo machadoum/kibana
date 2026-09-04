@@ -7,10 +7,11 @@
 
 import type { ConversationRoundStep } from '@kbn/agent-builder-common';
 
-export type StreamType = 'send' | 'regenerate' | 'resume';
+export type StreamType = 'send' | 'regenerate' | 'resume' | 'follow';
 
 export interface ActiveStream {
   type: StreamType;
+  executionId?: string;
 }
 
 export interface StreamRecord {

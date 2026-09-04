@@ -28,6 +28,18 @@ export interface EmbeddableConversationSidebarProps {
   onClose?: () => void;
   ariaLabelledBy: string;
   /**
+   * Conversation to restore on open. When set, stale React Query cache for this id is
+   * cleared before fetching from the server.
+   * @internal Passed via `openChat({ conversationId })`.
+   */
+  conversationId?: string;
+  /**
+   * Bumps on each `openChat({ conversationId })` call so the embeddable re-fetches even
+   * when reopening the same conversation id.
+   * @internal
+   */
+  conversationReopenNonce?: number;
+  /**
    * Callback to register sidebar control methods.
    * Used internally to update sidebar props and clear browser API tools.
    * @internal

@@ -22,3 +22,6 @@ export const MAX_CONVERSATIONS_PER_PAGE = 1000;
  * not reachable through offset pagination; requests past it return 400.
  */
 export const MAX_RESULT_WINDOW = 10_000;
+
+/** Metadata key on agent executions linking them to a conversation (for in-flight lookup). */
+export const EXECUTION_CONVERSATION_ID_METADATA_KEY = 'conversation_id';

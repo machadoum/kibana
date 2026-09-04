@@ -15,6 +15,7 @@ export type {
   WorkflowListItem,
 } from './tools';
 export type { AgentsServiceStartContract } from './agents';
+export type { ConversationsServiceStartContract } from './conversations';
 export type { AttachmentUIDefinition, AttachmentServiceStartContract } from './attachments';
 export type { RendererUIDefinition, RendererServiceStartContract } from './renderers';
 export type {

@@ -16,6 +16,7 @@ import type { KibanaRequest } from '@kbn/core-http-server';
 import type { ChatEvent, InteractivityConfig } from '@kbn/agent-builder-common';
 import {
   agentBuilderDefaultAgentId,
+  AgentExecutionMode,
   createBadRequestError,
   normalizeInteractive,
 } from '@kbn/agent-builder-common';
@@ -43,6 +44,7 @@ import {
 import { AbortMonitor } from './task/abort_monitor';
 import { HeartbeatReporter } from './task/heartbeat_reporter';
 import { followExecution$ } from './execution_follower';
+import { EXECUTION_CONVERSATION_ID_METADATA_KEY } from '../../../common/constants';
 
 export interface AgentExecutionServiceDeps extends AgentExecutionDeps {
   elasticsearch: ElasticsearchServiceStart;
@@ -93,6 +95,8 @@ class AgentExecutionServiceImpl implements AgentExecutionService {
       ? { ...params, nextInput: { ...params.nextInput, attachments: validatedAttachments } }
       : params;
 
+    const executionMetadata = buildExecutionMetadata({ mode, params, metadata });
+
     let execution: AgentExecution;
     try {
       execution = await executionClient.create({
@@ -102,12 +106,12 @@ class AgentExecutionServiceImpl implements AgentExecutionService {
         spaceId,
         agentParams: validatedParams,
         parentExecutionId: params.parentExecutionId,
-        metadata,
+        metadata: executionMetadata,
         interactivity,
       });
     } catch (err) {
       if (isVersionConflictError(err)) {
-        if (metadata?.execution_idempotency_key) {
+        if (executionMetadata?.execution_idempotency_key) {
           this.logger.debug(
             `Duplicate idempotency key detected, returning existing execution ${executionId}`
           );
@@ -423,3 +427,27 @@ class AgentExecutionServiceImpl implements AgentExecutionService {
     return validated;
   }
 }
+
+const buildExecutionMetadata = ({
+  mode,
+  params,
+  metadata,
+}: {
+  mode: AgentExecutionMode;
+  params: ExecuteAgentParams['params'];
+  metadata?: Record<string, string>;
+}): Record<string, string> | undefined => {
+  const conversationId =
+    mode === AgentExecutionMode.conversation && 'conversationId' in params
+      ? params.conversationId
+      : undefined;
+
+  if (!conversationId && !metadata) {
+    return undefined;
+  }
+
+  return {
+    ...metadata,
+    ...(conversationId ? { [EXECUTION_CONVERSATION_ID_METADATA_KEY]: conversationId } : {}),
+  };
+};
