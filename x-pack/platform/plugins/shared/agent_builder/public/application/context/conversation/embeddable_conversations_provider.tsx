@@ -6,6 +6,7 @@
  */
 
 import React, { useMemo, useEffect, useCallback, useState, useRef } from 'react';
+import useObservable from 'react-use/lib/useObservable';
 import { I18nProvider } from '@kbn/i18n-react';
 import { KibanaContextProvider } from '@kbn/kibana-react-plugin/public';
 import { QueryClient, QueryClientProvider } from '@kbn/react-query';
@@ -20,7 +21,11 @@ import { upsertAttachmentsIntoList } from './upsert_attachments_into_list';
 import { removeAttachmentFromList } from './remove_attachment_from_list';
 import { removeAttachmentById } from './remove_attachment_by_id';
 import { AgentBuilderServicesContext } from '../agent_builder_services_context';
-import { StreamingProvider } from '../streaming/streaming_context';
+import { StreamingContext, StreamingProvider } from '../streaming/streaming_context';
+import {
+  sidebarQueryClient,
+  sidebarStreamingValue$,
+} from '../../../sidebar/sidebar_streaming_singleton';
 import { useConversationActions } from './use_conversation_actions';
 import { ConversationChangeNotifier } from './conversation_change_notifier';
 import { usePersistedConversationId } from '../../hooks/use_persisted_conversation_id';
@@ -88,8 +93,18 @@ export const EmbeddableConversationsProvider: React.FC<EmbeddableConversationsPr
     }
   }, [onRegisterCallbacks]);
 
-  // Create a QueryClient per instance to ensure cache isolation between multiple embeddable conversations
-  const queryClient = useMemo(() => new QueryClient(), []);
+  const persistAcrossReopen = contextProps.persistAcrossReopen ?? false;
+
+  // Create a QueryClient per instance to ensure cache isolation between multiple embeddable
+  // conversations. When `persistAcrossReopen` is set (chrome sidebar only), reuse the
+  // singleton client instead so the cache survives the sidebar's close/reopen cycle.
+  const localQueryClient = useMemo(() => new QueryClient(), []);
+  const queryClient = persistAcrossReopen ? sidebarQueryClient : localQueryClient;
+
+  const bridgedStreamingValue = useObservable(
+    sidebarStreamingValue$,
+    sidebarStreamingValue$.getValue()
+  );
 
   const kibanaServices = useMemo(
     () => ({
@@ -288,17 +303,25 @@ export const EmbeddableConversationsProvider: React.FC<EmbeddableConversationsPr
     ]
   );
 
+  const conversationTree = (
+    <PinnedConversationProvider baseValue={conversationContextValue}>
+      {children}
+    </PinnedConversationProvider>
+  );
+
   return (
     <KibanaContextProvider services={kibanaServices}>
       <I18nProvider>
         <QueryClientProvider client={queryClient}>
           <AgentBuilderServicesContext.Provider value={services}>
             <AppLeaveContext.Provider value={noopOnAppLeave}>
-              <StreamingProvider>
-                <PinnedConversationProvider baseValue={conversationContextValue}>
-                  {children}
-                </PinnedConversationProvider>
-              </StreamingProvider>
+              {persistAcrossReopen && bridgedStreamingValue ? (
+                <StreamingContext.Provider value={bridgedStreamingValue}>
+                  {conversationTree}
+                </StreamingContext.Provider>
+              ) : (
+                <StreamingProvider>{conversationTree}</StreamingProvider>
+              )}
             </AppLeaveContext.Provider>
           </AgentBuilderServicesContext.Provider>
         </QueryClientProvider>

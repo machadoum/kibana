@@ -14,3 +14,9 @@ export {
 } from './sidebar_context';
 
 export type { SidebarRuntimeContext } from './sidebar_context';
+
+export {
+  sidebarQueryClient,
+  sidebarStreamingValue$,
+  SidebarStreamingSingletonRoot,
+} from './sidebar_streaming_singleton';

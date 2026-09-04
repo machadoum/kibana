@@ -95,6 +95,7 @@ jest.mock('./sidebar', () => ({
   setSidebarServices: jest.fn(),
   setSidebarRuntimeContext: jest.fn(),
   clearSidebarRuntimeContext: jest.fn(),
+  SidebarStreamingSingletonRoot: () => null,
 }));
 
 jest.mock('./components/nav_control/lazy_agent_builder_nav_control', () => ({

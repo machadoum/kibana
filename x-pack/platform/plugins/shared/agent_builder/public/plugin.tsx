@@ -18,6 +18,7 @@ import { BehaviorSubject, distinctUntilChanged, type Subscription } from 'rxjs';
 import { AGENT_BUILDER_EXPERIMENTAL_FEATURES_SETTING_ID } from '@kbn/management-settings-ids';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import type { UsageCollectionSetup } from '@kbn/usage-collection-plugin/public';
 import { ProjectRoutingAccess } from '@kbn/cps-utils';
 import { registerLocators } from './locator/register_locators';
@@ -70,6 +71,7 @@ import {
   setSidebarServices,
   setSidebarRuntimeContext,
   clearSidebarRuntimeContext,
+  SidebarStreamingSingletonRoot,
 } from './sidebar';
 import { storageKeys } from './application/storage_keys';
 import { AGENTBUILDER_APP_ID } from '../common/features';
@@ -273,6 +275,13 @@ export class AgentBuilderPlugin
     this.internalServices = internalServices;
 
     setSidebarServices(core, internalServices);
+
+    const sidebarStreamingHost = document.createElement('div');
+    sidebarStreamingHost.style.display = 'none';
+    document.body.appendChild(sidebarStreamingHost);
+    createRoot(sidebarStreamingHost).render(
+      <SidebarStreamingSingletonRoot coreStart={core} services={internalServices} />
+    );
 
     const LazyConfiguredEmbeddableConversation = React.lazy(async () => {
       const { createEmbeddableConversation } = await import(

@@ -33,6 +33,13 @@ export interface EmbeddableConversationSidebarProps {
    * @internal
    */
   onRegisterCallbacks?: (callbacks: EmbeddableConversationCallbacks) => void;
+  /**
+   * When true, uses the singleton `QueryClient`/`StreamingProvider` (mounted once outside
+   * the sidebar's lifecycle) instead of creating fresh ones on mount, so in-flight streams
+   * and cached conversation data survive the sidebar's close/reopen cycle.
+   * @internal Set only by `sidebar_conversation.tsx`.
+   */
+  persistAcrossReopen?: boolean;
 }
 
 export type EmbeddableConversationInternalProps = EmbeddableConversationDependencies &

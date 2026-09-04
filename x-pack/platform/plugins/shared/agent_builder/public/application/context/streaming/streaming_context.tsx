@@ -8,9 +8,12 @@
 /**
  * Lifted streaming state.
  *
- * `StreamingProvider` is mounted ONCE above the routes/sidebar (in `mount.tsx` for the
- * routed app, in `embeddable_conversations_provider.tsx` for the embeddable). All streaming
- * state lives here so the sidebar can observe it.
+ * `StreamingProvider` is mounted ONCE above the routes (in `mount.tsx` for the routed app).
+ * For the chrome sidebar, chrome unmounts the whole React tree on close, so mounting
+ * `StreamingProvider` inside `embeddable_conversations_provider.tsx` would reset all
+ * streaming state on every reopen. Instead the sidebar bridges in a value produced by a
+ * singleton `StreamingProvider` mounted once outside its lifecycle — see
+ * `sidebar/sidebar_streaming_singleton.tsx`.
  *
  * State:
  *   - `activeStreams`: `Map<conversationId, { type }>`. Each in-flight stream owns one
@@ -40,7 +43,12 @@ export interface StreamingContextValue {
   removeAllErrors: () => void;
 }
 
-const StreamingContext = createContext<StreamingContextValue | null>(null);
+/**
+ * Exported (not just the hook) so the embeddable sidebar can provide a value bridged in
+ * from the persistent singleton root instead of mounting a fresh `StreamingProvider`.
+ * See `sidebar/sidebar_streaming_singleton.tsx`.
+ */
+export const StreamingContext = createContext<StreamingContextValue | null>(null);
 
 const emptyRecord: StreamRecord = { errorSteps: [] };
 

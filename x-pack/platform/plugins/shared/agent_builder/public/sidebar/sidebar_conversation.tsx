@@ -55,6 +55,7 @@ export function SidebarConversation({ onClose }: SidebarComponentProps): React.R
         ariaLabelledBy="agent-builder-sidebar"
         onRegisterCallbacks={onRegisterCallbacks}
         {...restOptions}
+        persistAcrossReopen
       />
     </div>
   );
